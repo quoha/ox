@@ -15,6 +15,7 @@
 
 static oxval *oxval_alloc_boolean(int value);
 static oxval *oxval_alloc_integer(int value, int isNull);
+static oxval *oxval_alloc_queue(oxdeq *queue);
 static oxval *oxval_alloc_real(double value, int isNull);
 static oxval *oxval_alloc_stack(oxstk *stack);
 static oxval *oxval_alloc_symbol(const char *name, oxval *value);
@@ -28,8 +29,9 @@ static oxval *oxval_alloc_text(const char *value);
 //    d real    per the isNull flag
 //    i integer per the isNull flag
 //    k stack   not applicable
-//    t text    if ptr is null or isNull flag
+//    q queue   not applicable
 //    s symbol  not applicable
+//    t text    if ptr is null or isNull flag
 //
 oxval *oxval_alloc(char type, char isNull, ...) {
     oxval *v = malloc(sizeof(*v));
@@ -41,6 +43,7 @@ oxval *oxval_alloc(char type, char isNull, ...) {
     int         boolean = 0;
     int         integer = 0;
     const char *name    = NULL;
+    oxdeq      *queue   = NULL;
     double      real    = 0.0;
     oxstk      *stack   = NULL;
     const char *text    = NULL;
@@ -65,6 +68,9 @@ oxval *oxval_alloc(char type, char isNull, ...) {
         case 'k':
             stack = va_arg(ap, oxstk *);
             break;
+        case 'q':
+            queue = va_arg(ap, oxdeq *);
+            break;
         case 's':
             name  = va_arg(ap, const char *);
             value = va_arg(ap, oxval *);
@@ -76,6 +82,7 @@ oxval *oxval_alloc(char type, char isNull, ...) {
             boolean = 0;
             integer = 0;
             name    = NULL;
+            queue   = NULL;
             real    = 0.0;
             stack   = NULL;
             text    = NULL;
@@ -130,6 +137,26 @@ static oxval *oxval_alloc_integer(int value, int isNull) {
     v->u.number.kind          = oxtInteger;
     v->u.number.isNull        = isNull ? -1 : 0;
     v->u.number.value.integer = value;
+    return v;
+}
+
+static oxval *oxval_alloc_queue(oxdeq *queue) {
+    oxval *v = malloc(sizeof(*v));
+    if (!v) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    v->kind      = oxtQueue;
+    if (queue) {
+        // TODO: deep copy of stack here
+        v->u.queue   = oxdeq_alloc();
+    } else {
+        v->u.queue   = oxdeq_alloc();
+    }
+    if (!v->u.queue) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
     return v;
 }
 

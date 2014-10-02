@@ -22,6 +22,27 @@ oxdeq *oxdeq_alloc(void) {
     return q;
 }
 
+// potentially create a deep copy of a queue.
+//
+// the 'fcopy' function is responsible for creating a deep copy
+// of the data. if function is not supplied, then will do a shallow
+// copy of the queue by sharing the data between the two queues.
+//
+// only the caller knows if that is desirable.
+//
+oxdeq *oxdeq_copy(oxdeq *q, void *(*fcopy)(void *data)) {
+    oxdeq *c = oxdeq_alloc();
+    if (q && q->numberOfEntries) {
+        q->e = q->front;
+        while (q->e) {
+            void *copyOfData = fcopy ? fcopy(q->e->data) : q->e->data;
+            oxdeq_push_back(c, copyOfData);
+            q->e = q->e->next;
+        }
+    }
+    return c;
+}
+
 ssize_t oxdeq_number_of_entries(oxdeq *q) {
     return q ? q->numberOfEntries : 0;
 }
@@ -56,7 +77,7 @@ void *oxdeq_pop_front(oxdeq *q) {
     if (v) {
         q->e     = q->front;
         q->front = q->front->next;
-        if (q->front) {
+        if (!q->front) {
             q->front->prev = 0;
         } else {
             q->front = q->back = 0;
@@ -75,7 +96,6 @@ oxdeq *oxdeq_push_back(oxdeq *q, void *data) {
             perror(__FUNCTION__);
             exit(2);
         }
-        q->e->data = data;
         q->e->data = data;
         q->e->prev = q->back;
         q->e->next = 0;
@@ -135,6 +155,7 @@ oxdeq *oxdeq_reverse(oxdeq *q) {
             q->e       = q->e->next;
             q->t       = q->t->prev;
         }
+        q->e = q->t = 0;
     }
     return q;
 }

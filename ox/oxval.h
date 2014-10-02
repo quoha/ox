@@ -10,9 +10,12 @@
 
 #include <stdlib.h>
 
+#include "oxdeq.h"
+
 typedef struct oxval {
     union {
         int           boolean;
+        struct oxdeq *queue;
         struct oxstk *stack;
         struct {
             union {
@@ -32,7 +35,7 @@ typedef struct oxval {
             struct oxval *value;
         } symbol;
     } u;
-    enum { oxtBool, oxtNumber, oxtStack, oxtSymbol, oxtText } kind;
+    enum { oxtBool, oxtNumber, oxtQueue, oxtStack, oxtSymbol, oxtText } kind;
     unsigned char data[1];
 } oxval;
 
