@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 #include "oxbuf.h"
-#include "oxstk.h"
+#include "oxdeq.h"
 #include "oxval.h"
 
 #endif
