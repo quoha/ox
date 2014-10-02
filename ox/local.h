@@ -10,14 +10,7 @@
 
 #include <stdlib.h>
 
-typedef struct oxbuf    oxbuf;
-typedef struct oxent    oxent;
-typedef struct oxstk    oxstk;
-typedef struct oxval    oxval;
-typedef struct oxwhtlst oxwhtlst;
-
 #include "oxbuf.h"
-#include "oxent.h"
 #include "oxstk.h"
 #include "oxval.h"
 

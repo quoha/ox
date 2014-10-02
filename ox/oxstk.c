@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static oxent *oxent_new(void);
+
 oxstk *oxstk_new(void) {
     oxstk *s = malloc(sizeof(*s));
     if (!s) {
@@ -21,3 +23,13 @@ oxstk *oxstk_new(void) {
     return s;
 }
 
+static oxent *oxent_new(void) {
+    oxent *e = malloc(sizeof(*e));
+    if (!e) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    e->prev = e->next = 0;
+    e->value = 0;
+    return e;
+}
