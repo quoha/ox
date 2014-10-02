@@ -8,12 +8,6 @@
 #ifndef __ox__oxstk__
 #define __ox__oxstk__
 
-typedef struct oxent {
-    struct oxent *prev;
-    struct oxent *next;
-    struct oxval *value;
-} oxent;
-
 typedef struct oxstk {
     struct oxent *top;
     struct oxent *bottom;
