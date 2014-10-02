@@ -17,7 +17,7 @@ oxdeq *oxdeq_alloc(void) {
         perror(__FUNCTION__);
         exit(2);
     }
-    q->front = q->back = q->e = q->t = 0;
+    q->left = q->right = q->e = q->t = 0;
     q->numberOfEntries = 0;
     return q;
 }
@@ -33,11 +33,11 @@ oxdeq *oxdeq_alloc(void) {
 oxdeq *oxdeq_copy(oxdeq *q, void *(*fcopy)(void *data)) {
     oxdeq *c = oxdeq_alloc();
     if (q && q->numberOfEntries) {
-        q->e = q->front;
+        q->e = q->left;
         while (q->e) {
             void *copyOfData = fcopy ? fcopy(q->e->data) : q->e->data;
-            oxdeq_push_back(c, copyOfData);
-            q->e = q->e->next;
+            oxdeq_push_right(c, copyOfData);
+            q->e = q->e->right;
         }
     }
     return c;
@@ -47,23 +47,22 @@ ssize_t oxdeq_number_of_entries(oxdeq *q) {
     return q ? q->numberOfEntries : 0;
 }
 
-void *oxdeq_peek_back(oxdeq *q) {
-    return (q && q->back) ? q->back->data : 0;
+void *oxdeq_peek_left(oxdeq *q) {
+    return (q && q->left) ? q->left->data : 0;
 }
 
-void *oxdeq_peek_front(oxdeq *q) {
-    return (q && q->front) ? q->front->data : 0;
+void *oxdeq_peek_right(oxdeq *q) {
+    return (q && q->right) ? q->right->data : 0;
 }
 
-void *oxdeq_pop_back(oxdeq *q) {
-    void *v = (q && q->back) ? q->back->data : 0;
+void *oxdeq_pop_left(oxdeq *q) {
+    void *v = (q && q->left) ? q->left->data : 0;
     if (v) {
-        q->e    = q->back;
-        q->back = q->back->prev;
-        if (q->back) {
-            q->back->next = 0;
+        q->e = q->left;
+        if (!q->left->right) {
+            q->left  = q->right = 0;
         } else {
-            q->front = q->back = 0;
+            q->left  = q->left->right;
         }
         q->numberOfEntries--;
         free(q->e);
@@ -72,15 +71,14 @@ void *oxdeq_pop_back(oxdeq *q) {
     return v;
 }
 
-void *oxdeq_pop_front(oxdeq *q) {
-    void *v = (q && q->front) ? q->front->data : 0;
+void *oxdeq_pop_right(oxdeq *q) {
+    void *v = (q && q->right) ? q->right->data : 0;
     if (v) {
-        q->e     = q->front;
-        q->front = q->front->next;
-        if (!q->front) {
-            q->front->prev = 0;
+        q->e = q->right;
+        if (!q->right->left) {
+            q->left  = q->right = 0;
         } else {
-            q->front = q->back = 0;
+            q->right = q->right->left;
         }
         q->numberOfEntries--;
         free(q->e);
@@ -89,21 +87,20 @@ void *oxdeq_pop_front(oxdeq *q) {
     return v;
 }
 
-oxdeq *oxdeq_push_back(oxdeq *q, void *data) {
+oxdeq *oxdeq_push_left(oxdeq *q, void *data) {
     if (q && data) {
         q->e = malloc(sizeof(*(q->e)));
         if (!q->e) {
             perror(__FUNCTION__);
             exit(2);
         }
-        q->e->data = data;
-        q->e->prev = q->back;
-        q->e->next = 0;
-        if (!q->back) {
-            q->front = q->back = q->e;
+        q->e->data  = data;
+        q->e->left  = 0;
+        q->e->right = q->left;
+        if (!q->left) {
+            q->left = q->right      = q->e;
         } else {
-            q->back->next = q->e;
-            q->back       = q->e;
+            q->left = q->left->left = q->e;
         }
         q->numberOfEntries++;
         q->e = 0;
@@ -111,21 +108,20 @@ oxdeq *oxdeq_push_back(oxdeq *q, void *data) {
     return q;
 }
 
-oxdeq *oxdeq_push_front(oxdeq *q, void *data) {
+oxdeq *oxdeq_push_right(oxdeq *q, void *data) {
     if (q && data) {
         q->e = malloc(sizeof(*(q->e)));
         if (!q->e) {
             perror(__FUNCTION__);
             exit(2);
         }
-        q->e->data = data;
-        q->e->prev = 0;
-        q->e->next = q->front;
-        if (!q->front) {
-            q->front = q->back = q->e;
+        q->e->data  = data;
+        q->e->left  = q->right;
+        q->e->right = 0;
+        if (!q->right) {
+            q->left  = q->right        = q->e;
         } else {
-            q->front->prev = q->e;
-            q->front       = q->e;
+            q->right = q->right->right = q->e;
         }
         q->numberOfEntries++;
         q->e = 0;
@@ -139,21 +135,24 @@ oxdeq *oxdeq_push_front(oxdeq *q, void *data) {
 //
 oxdeq *oxdeq_reverse(oxdeq *q) {
     if (q) {
-        q->e = q->front;
-        q->t = q->back;
+        q->e = q->left;
+        q->t = q->right;
 
         while (q->e != q->t) {
             void *tmp  = q->e->data;
             q->e->data = q->t->data;
             q->t->data = tmp;
             
-            if (q->e->next == q->t) {
+            if (q->e->right == q->t) {
                 // the two ends have met, so we're done
                 //
                 break;
             }
-            q->e       = q->e->next;
-            q->t       = q->t->prev;
+
+            // haven't met, so move the ends towards the middle
+            //
+            q->e = q->e->right;
+            q->t = q->t->left;
         }
         q->e = q->t = 0;
     }

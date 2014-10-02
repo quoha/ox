@@ -20,7 +20,7 @@ static oxval *oxval_alloc_symbol(const char *name, oxval *value);
 static oxval *oxval_alloc_text(const char *value);
 
 //
-// oxval_alloc(flag, value)
+// oxval_alloc(flag, isNullFlag, value)
 //
 // flag value__ is_null______________________
 //    b boolean not applicable
