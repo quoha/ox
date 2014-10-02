@@ -13,75 +13,6 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-// remove all 0xFF bytes from the buffer
-//
-// note - scans from s->curr forward
-// note - will reset s->curr if needed
-//
-oxbuf *oxbuf_delete_ff(oxbuf *s) {
-    if (s) {
-        unsigned char *originalEndOfData = s->endOfData;
-        
-        // find the first 0xFF character in the buffer
-        //
-        unsigned char *src = s->curr;
-        while (src < s->endOfData && *src != 0xFF) {
-            src++;
-        }
-        
-        // remove the unwanted data from the buffer by
-        // shifting the rest of the buffer forward
-        //
-        unsigned char *tgt = src;
-        while (src < s->endOfData) {
-            if (*src != 0xFF) {
-                *(tgt++) = *src;
-            }
-            src++;
-        }
-        
-        // make sure that s->curr and s->endOfData remain valid
-        //
-        s->endOfData = tgt;
-        if (!(s->curr < s->endOfData)) {
-            s->curr = s->endOfData;
-        }
-        
-        // as a courtesy, nul out the rest of the original buffer.
-        //
-        if (tgt < originalEndOfData) {
-            memset(tgt, 0, originalEndOfData - tgt);
-        }
-    }
-    
-    return s;
-}
-
-
-// change carriage-return + new-line combination
-// into just new-line. as a side-effect, removes
-// all 0xFF bytes, too. sorry about that.
-//
-// note - scans from s->curr forward
-// note - will reset s->curr if needed
-//
-oxbuf *oxbuf_force_unix_eol(oxbuf *s) {
-    if (s) {
-        // replace carriage-return + new-line combination
-        // with nul + new-line
-        //
-        unsigned char *src = s->curr;
-        while (src < s->endOfData) {
-            if (*src == '\r' && *(src + 1) == '\n') {
-                *src = 0xFF;
-            }
-            src++;
-        }
-    }
-    
-    return oxbuf_delete_ff(s);
-}
-
 // this function reads an entire C-string into a buffer
 //
 oxbuf *oxbuf_from_cstring(const char *s) {
@@ -172,6 +103,74 @@ oxbuf *oxbuf_from_oxbuf(oxbuf *s) {
     }
     
     return d;
+}
+
+// remove all 0xFF bytes from the buffer
+//
+// note - scans from s->curr forward
+// note - will reset s->curr if needed
+//
+oxbuf *oxbuf_delete_ff(oxbuf *s) {
+    if (s) {
+        unsigned char *originalEndOfData = s->endOfData;
+        
+        // find the first 0xFF character in the buffer
+        //
+        unsigned char *src = s->curr;
+        while (src < s->endOfData && *src != 0xFF) {
+            src++;
+        }
+        
+        // remove the unwanted data from the buffer by
+        // shifting the rest of the buffer forward
+        //
+        unsigned char *tgt = src;
+        while (src < s->endOfData) {
+            if (*src != 0xFF) {
+                *(tgt++) = *src;
+            }
+            src++;
+        }
+        
+        // make sure that s->curr and s->endOfData remain valid
+        //
+        s->endOfData = tgt;
+        if (!(s->curr < s->endOfData)) {
+            s->curr = s->endOfData;
+        }
+        
+        // as a courtesy, nul out the rest of the original buffer.
+        //
+        if (tgt < originalEndOfData) {
+            memset(tgt, 0, originalEndOfData - tgt);
+        }
+    }
+    
+    return s;
+}
+
+// change carriage-return + new-line combination
+// into just new-line. as a side-effect, removes
+// all 0xFF bytes, too. sorry about that.
+//
+// note - scans from s->curr forward
+// note - will reset s->curr if needed
+//
+oxbuf *oxbuf_force_unix_eol(oxbuf *s) {
+    if (s) {
+        // replace carriage-return + new-line combination
+        // with nul + new-line
+        //
+        unsigned char *src = s->curr;
+        while (src < s->endOfData) {
+            if (*src == '\r' && *(src + 1) == '\n') {
+                *src = 0xFF;
+            }
+            src++;
+        }
+    }
+    
+    return oxbuf_delete_ff(s);
 }
 
 // remove all characters from the buffer that are not

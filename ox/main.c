@@ -16,6 +16,9 @@ int main(int argc, const char * argv[]) {
 
     oxbuf *a = oxbuf_from_cstring("hello, world  \nthis is a test\n");
 
+    oxdeq *q = oxdeq_alloc();
+    oxdeq_reverse(q);
+
     printf("%s\n", a->data);
 
     return 0;

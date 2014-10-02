@@ -8,9 +8,7 @@
 #ifndef __ox__oxbuf__
 #define __ox__oxbuf__
 
-#include <stdio.h>
-
-// this structure should hold the entire file
+// hold a buffer in memory
 //
 typedef struct oxbuf {
     unsigned char *curr;
@@ -19,16 +17,22 @@ typedef struct oxbuf {
     unsigned char data[1];
 } oxbuf;
 
+// provide a character set map for white lists and translating data
+//
 typedef struct oxwhtlst {
     unsigned char map[256];
 } oxwhtlst;
 
-
-oxbuf *oxbuf_delete_ff(oxbuf *s);
-oxbuf *oxbuf_force_unix_eol(oxbuf *s);
+// functions to create a buffer
+//
 oxbuf *oxbuf_from_cstring(const char *s);
 oxbuf *oxbuf_from_file(const char *fileName);
 oxbuf *oxbuf_from_oxbuf(oxbuf *s);
+
+// functions to transform the buffer
+//
+oxbuf *oxbuf_delete_ff(oxbuf *s);
+oxbuf *oxbuf_force_unix_eol(oxbuf *s);
 oxbuf *oxbuf_keep_whitelist(oxbuf *s, oxwhtlst *w);
 oxbuf *oxbuf_remove_carriage_returns(oxbuf *s);
 oxbuf *oxbuf_remove_non_ascii(oxbuf *s);
