@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		29A4A7CB19DC88E300188555 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4A7CA19DC88E300188555 /* main.c */; };
+		29A4A7D819DDAAC900188555 /* oxent.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4A7D619DDAAC900188555 /* oxent.c */; };
+		29A4A7DB19DDABB800188555 /* oxbuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4A7D919DDABB800188555 /* oxbuf.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +27,11 @@
 /* Begin PBXFileReference section */
 		29A4A7C719DC88E300188555 /* ox */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ox; sourceTree = BUILT_PRODUCTS_DIR; };
 		29A4A7CA19DC88E300188555 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		29A4A7D119DCF3D500188555 /* local.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = local.h; sourceTree = "<group>"; };
+		29A4A7D619DDAAC900188555 /* oxent.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxent.c; sourceTree = SOURCE_ROOT; };
+		29A4A7D719DDAAC900188555 /* oxent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxent.h; sourceTree = SOURCE_ROOT; };
+		29A4A7D919DDABB800188555 /* oxbuf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxbuf.c; sourceTree = "<group>"; };
+		29A4A7DA19DDABB800188555 /* oxbuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxbuf.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +65,11 @@
 			isa = PBXGroup;
 			children = (
 				29A4A7CA19DC88E300188555 /* main.c */,
+				29A4A7D119DCF3D500188555 /* local.h */,
+				29A4A7DA19DDABB800188555 /* oxbuf.h */,
+				29A4A7D919DDABB800188555 /* oxbuf.c */,
+				29A4A7D719DDAAC900188555 /* oxent.h */,
+				29A4A7D619DDAAC900188555 /* oxent.c */,
 			);
 			path = ox;
 			sourceTree = "<group>";
@@ -118,6 +130,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29A4A7DB19DDABB800188555 /* oxbuf.c in Sources */,
+				29A4A7D819DDAAC900188555 /* oxent.c in Sources */,
 				29A4A7CB19DC88E300188555 /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
