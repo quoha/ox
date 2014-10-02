@@ -16,7 +16,6 @@ typedef struct oxval {
     union {
         int           boolean;
         struct oxdeq *queue;
-        struct oxstk *stack;
         struct {
             union {
                 int    integer;
@@ -35,7 +34,7 @@ typedef struct oxval {
             struct oxval *value;
         } symbol;
     } u;
-    enum { oxtBool, oxtNumber, oxtQueue, oxtStack, oxtSymbol, oxtText } kind;
+    enum { oxtBool, oxtNumber, oxtQueue, oxtSymbol, oxtText } kind;
     unsigned char data[1];
 } oxval;
 

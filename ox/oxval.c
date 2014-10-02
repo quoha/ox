@@ -6,7 +6,6 @@
 //
 
 #include "oxval.h"
-#include "oxstk.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -17,7 +16,6 @@ static oxval *oxval_alloc_boolean(int value);
 static oxval *oxval_alloc_integer(int value, int isNull);
 static oxval *oxval_alloc_queue(oxdeq *queue);
 static oxval *oxval_alloc_real(double value, int isNull);
-static oxval *oxval_alloc_stack(oxstk *stack);
 static oxval *oxval_alloc_symbol(const char *name, oxval *value);
 static oxval *oxval_alloc_text(const char *value);
 
@@ -28,7 +26,6 @@ static oxval *oxval_alloc_text(const char *value);
 //    b boolean not applicable
 //    d real    per the isNull flag
 //    i integer per the isNull flag
-//    k stack   not applicable
 //    q queue   not applicable
 //    s symbol  not applicable
 //    t text    if ptr is null or isNull flag
@@ -45,7 +42,6 @@ oxval *oxval_alloc(char type, char isNull, ...) {
     const char *name    = NULL;
     oxdeq      *queue   = NULL;
     double      real    = 0.0;
-    oxstk      *stack   = NULL;
     const char *text    = NULL;
     oxval      *value   = NULL;
     
@@ -65,9 +61,6 @@ oxval *oxval_alloc(char type, char isNull, ...) {
         case 'i':
             integer = va_arg(ap, int);
             break;
-        case 'k':
-            stack = va_arg(ap, oxstk *);
-            break;
         case 'q':
             queue = va_arg(ap, oxdeq *);
             break;
@@ -84,7 +77,6 @@ oxval *oxval_alloc(char type, char isNull, ...) {
             name    = NULL;
             queue   = NULL;
             real    = 0.0;
-            stack   = NULL;
             text    = NULL;
             value   = NULL;
             break;
@@ -101,8 +93,8 @@ oxval *oxval_alloc(char type, char isNull, ...) {
             return oxval_alloc_real(real, isNull);
         case 'i':
             return oxval_alloc_integer(integer, isNull);
-        case 'k':
-            return oxval_alloc_stack(NULL);
+        case 'q':
+            return oxval_alloc_queue(queue);
         case 's':
             return oxval_alloc_symbol(name, value);
         case 't':
@@ -148,8 +140,7 @@ static oxval *oxval_alloc_queue(oxdeq *queue) {
     }
     v->kind      = oxtQueue;
     if (queue) {
-        // TODO: deep copy of stack here
-        v->u.queue   = oxdeq_alloc();
+        v->u.queue   = oxdeq_copy(queue, 0);
     } else {
         v->u.queue   = oxdeq_alloc();
     }
@@ -170,24 +161,6 @@ static oxval *oxval_alloc_real(double value, int isNull) {
     v->u.number.kind       = oxtReal;
     v->u.number.isNull     = isNull ? -1 : 0;
     v->u.number.value.real = value;
-    return v;
-}
-
-static oxval *oxval_alloc_stack(oxstk *stack) {
-    oxval *v = malloc(sizeof(*v));
-    if (!v) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
-    v->kind      = oxtStack;
-    v->u.stack   = oxstk_new();
-    if (!v->u.stack) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
-    if (stack) {
-        // TODO: deep copy of stack here
-    }
     return v;
 }
 
