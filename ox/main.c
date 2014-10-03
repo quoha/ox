@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
+
 static const char *source =
 "{{/* a comment */}}\n"
 "{{pipeline}}\n"
