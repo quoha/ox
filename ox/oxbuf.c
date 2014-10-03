@@ -13,35 +13,32 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-// this function reads an entire C-string into a buffer
+// this function loads memory into the buffer with no bounds
+// checking.
 //
-oxbuf *oxbuf_from_cstring(const char *s) {
-    size_t len;
-    if (s) {
-        len = strlen(s);
-    } else {
-        len = 0;
-    }
-    
+oxbuf *oxbuf_from_buffer(const unsigned char *s, ssize_t length) {
     // create data for the size
     //
-    oxbuf *d = malloc(sizeof(*d) + len);
+    oxbuf *d = malloc(sizeof(*d) + length);
     if (!d) {
         perror(__FUNCTION__);
         exit(2);
     }
     
     d->curr      = d->data;
-    d->endOfData = d->data + len;
+    d->endOfData = d->data + length;
     d->lineNumber = 0;
-    
-    if (len) {
-        strcpy((char *)(d->data), s);
-    } else {
-        d->data[0] = 0;
-    }
+
+    memcpy(d->data, s, length);
+    d->data[length] = 0;
     
     return d;
+}
+
+// this function loads an entire C-string into a buffer
+//
+oxbuf *oxbuf_from_cstring(const char *s) {
+    return oxbuf_from_buffer((const unsigned char *)(s ? s : ""), s ? strlen(s) : 0);
 }
 
 // this function reads the entire file into a buffer
@@ -103,6 +100,21 @@ oxbuf *oxbuf_from_oxbuf(oxbuf *s) {
     }
     
     return d;
+}
+
+//
+//
+oxbuf *oxbuf_advance_to_string(oxbuf *b, const char *string) {
+    if (b && string && *string) {
+        size_t len = strlen(string);
+        while (b->curr < b->endOfData && strncmp(string, (const char *)(b->curr), len)) {
+            if (b->curr[0] == '\n') {
+                b->lineNumber++;
+            }
+            b->curr++;
+        }
+    }
+    return b;
 }
 
 // remove all 0xFF bytes from the buffer

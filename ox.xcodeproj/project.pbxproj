@@ -11,6 +11,7 @@
 		29A4A7DB19DDABB800188555 /* oxbuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4A7D919DDABB800188555 /* oxbuf.c */; };
 		29E873AE19DDAE240098447B /* oxval.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873AC19DDAE240098447B /* oxval.c */; };
 		29E873B119DDB5760098447B /* oxdeq.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873AF19DDB5760098447B /* oxdeq.c */; };
+		29E873B419DDDE380098447B /* oxchunk.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873B219DDDE380098447B /* oxchunk.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -35,6 +36,8 @@
 		29E873AD19DDAE240098447B /* oxval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxval.h; sourceTree = "<group>"; };
 		29E873AF19DDB5760098447B /* oxdeq.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxdeq.c; sourceTree = "<group>"; };
 		29E873B019DDB5760098447B /* oxdeq.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxdeq.h; sourceTree = "<group>"; };
+		29E873B219DDDE380098447B /* oxchunk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxchunk.c; sourceTree = "<group>"; };
+		29E873B319DDDE380098447B /* oxchunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxchunk.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +74,8 @@
 				29A4A7D119DCF3D500188555 /* local.h */,
 				29A4A7DA19DDABB800188555 /* oxbuf.h */,
 				29A4A7D919DDABB800188555 /* oxbuf.c */,
+				29E873B319DDDE380098447B /* oxchunk.h */,
+				29E873B219DDDE380098447B /* oxchunk.c */,
 				29E873B019DDB5760098447B /* oxdeq.h */,
 				29E873AF19DDB5760098447B /* oxdeq.c */,
 				29E873AD19DDAE240098447B /* oxval.h */,
@@ -138,6 +143,7 @@
 				29E873B119DDB5760098447B /* oxdeq.c in Sources */,
 				29A4A7DB19DDABB800188555 /* oxbuf.c in Sources */,
 				29A4A7CB19DC88E300188555 /* main.c in Sources */,
+				29E873B419DDDE380098447B /* oxchunk.c in Sources */,
 				29E873AE19DDAE240098447B /* oxval.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

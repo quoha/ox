@@ -13,5 +13,6 @@
 #include "oxbuf.h"
 #include "oxdeq.h"
 #include "oxval.h"
+#include "oxchunk.h"
 
 #endif
