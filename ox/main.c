@@ -6,94 +6,73 @@
 //
 
 #include "local.h"
+#include "oxparser.h"
 
 #include <stdio.h>
 #include <string.h>
 
-
-static const char *source =
-"{{/* a comment */}}\n"
-"{{pipeline}}\n"
-"{{if pipeline}} T1 {{end}}\n"
-"{{if pipeline}} T1 {{else}} T0 {{end}}\n"
-"If the value of the pipeline is empty, T0 is executed;\n"
-"{{if pipeline}} T1 {{else if pipeline}} T0 {{end}}\n"
-"{{if pipeline}} T1 {{else}}{{if pipeline}} T0 {{end}}{{end}}\n"
-"{{range pipeline}} T1 {{end}}\n"
-"{{range pipeline}} T1 {{else}} T0 {{end}}\n"
-"{{template \"name\"}}\n"
-"{{template \"name\" pipeline}}\n"
-"{{with pipeline}} T1 {{end}}\n"
-"{{with pipeline}} T1 {{else}} T0 {{end}}\n"
-"{\"\\\"output\\\"\"}}\n"
-"A string constant.\n"
-"{{`\"output\"`}}\n"
-"A raw string constant.\n"
-"{{printf \"%q\" \"output\"}}\n"
-"A function call.\n"
-"{{\"output\" | printf \"%q\"}}\n"
-"A function call whose final argument comes from the previous command.\n"
-"{{printf \"%q\" (print \"out\" \"put\")}}\n"
-"A parenthesized argument.\n"
-"{{\"put\" | printf \"%s%s\" \"out\" | printf \"%q\"}}\n"
-"A more elaborate call.\n"
-"{{\"output\" | printf \"%s\" | printf \"%q\"}}\n"
-"A longer chain.\n"
-"{{with \"output\"}}{{printf \"%q\" .}}{{end}}\n"
-"A with action using dot.\n"
-"{{with $x := \"output\" | printf \"%q\"}}{{$x}}{{end}}\n"
-"A with action that creates and uses a variable.\n"
-"{{with $x := \"output\"}}{{printf \"%q\" $x}}{{end}}\n"
-"A with action that uses the variable in another action.\n"
-"{{with $x := \"output\"}}{{$x | printf \"%q\"}}{{end}}\n"
-"The same, but pipelined.\n";
-
-static const char *prog =
-"int main(int argc, const char * argv[]) {\n"
-"    oxwhtlst w;\n"
-"    memset(&w, -1, sizeof(w));\n"
-"    return 0;\n"
-"}\n";
-
 int main(int argc, const char * argv[]) {
-    oxwhtlst w;
-    memset(&w, -1, sizeof(w));
+    int debugLevel = 0;
+    int doCheck    = 0;
+    int doOpt      = 1;
+    int idx;
 
-    oxbuf *a = oxbuf_from_cstring(source);
-    a = oxbuf_from_cstring(prog);
-    printf("\n\n\n-------------------\n\n\n%s\n\n\n", a->data);
+    oxbuf *a = 0;
 
-    char *p;
-    oxchunk *c;
-    int n = 0;
-    for (c = oxchunk_factory(a); c; c = oxchunk_factory(a)) {
-        switch (c->kind) {
-            case oxcComment:
-                break;
-            case oxcTemplate:
-                printf("%s\n", c->data);
-                break;
-            case oxcText:
-                printf("const char *t%09d = \"", n++);
-                p = c->data;
-                while (*p) {
-                    if (*p == '\n') {
-                        if (*(p + 1)) {
-                            printf("\\n\";\nconst char *t%09d = \"", n++);
-                        } else {
-                            printf("\\n");
-                        }
-                    } else if (*p == '"') {
-                        printf("\"");
-                    } else if (*p == '\\') {
-                        printf("\\");
-                    } else {
-                        printf("%c", *p);
-                    }
-                    p++;
+    for (idx = 1; idx < argc; idx++) {
+        printf("..opt: %3d %s\n", idx, argv[idx]);
+        if (!doOpt || !(argv[idx][0] == '-' && argv[idx][1] == '-')) {
+            // treat as a file name
+            a = oxbuf_from_file(argv[idx]);
+            if (!a) {
+                perror(argv[idx]);
+                return 0;
+            }
+            if (doCheck) {
+                oxtoken *t;
+                for (t = oxtok_read(a); t && t->kind != oxTokEOF; t = oxtok_read(a)) {
+                    printf("%5d: %s %s\n", t->line, oxtok_toktype(t), t->data);
+                    free(t);
                 }
-                printf("\";\n");
-                break;
+                if (t) {
+                    free(t);
+                }
+                return 0;
+            }
+            // execute the script
+        } else if (argv[idx][0] == '-' && argv[idx][1] == '-' && argv[idx][3] == 0) {
+            doOpt = 0;
+        } else if (argv[idx][0] == '-' && argv[idx][1] == '-') {
+            char *opt = strdup(argv[idx]);
+            if (!opt) {
+                perror(__FUNCTION__);
+                return 2;
+            }
+            char *val = opt;
+            while (*val && *val != '=') {
+                val++;
+            }
+            if (*val) {
+                *(val++) = 0;
+            } else {
+                val = 0;
+            }
+            
+            if (!strcmp(opt, "--help")) {
+                return 0;
+            } else if (!strcmp(opt, "--check-file")) {
+                doCheck++;
+            } else if (!strcmp(opt, "--debug")) {
+                debugLevel++;
+            } else {
+                fprintf(stderr, "error:\tinvalid option '%s'\n", argv[idx]);
+                return 2;
+            }
+            free(opt);
+        } else {
+            fprintf(stderr, "error:\tinvalid option '%s'\n", argv[idx]);
+            fprintf(stderr, "\ttry --help if you're stuck\n");
+            return 2;
         }
     }
 
