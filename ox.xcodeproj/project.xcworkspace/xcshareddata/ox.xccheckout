@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>C58E4788-C3E6-475E-AFBB-15856D248A3B</string>
+	<key>IDESourceControlProjectName</key>
+	<string>ox</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>0DF19BD6B8C6BEF37EEFE65B537771B729317F31</key>
+		<string>https://github.com/quoha/ox.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>ox.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>0DF19BD6B8C6BEF37EEFE65B537771B729317F31</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/quoha/ox.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>0DF19BD6B8C6BEF37EEFE65B537771B729317F31</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>0DF19BD6B8C6BEF37EEFE65B537771B729317F31</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ox</string>
+		</dict>
+	</array>
+</dict>
+</plist>
