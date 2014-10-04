@@ -28,7 +28,7 @@ int main(int argc, const char * argv[]) {
                 perror(argv[idx]);
                 return 0;
             }
-            if (doCheck) {
+            if (doCheck > 5) {
                 oxtoken *t;
                 for (t = oxtok_read(a); t && t->kind != oxTokEOF; t = oxtok_read(a)) {
                     printf("%5d: %s %s\n", t->line, oxtok_toktype(t), t->data);
@@ -39,7 +39,20 @@ int main(int argc, const char * argv[]) {
                 }
                 return 0;
             }
+
             // execute the script
+            oxcell *expr;
+            for (expr = oxexpr_read(a); expr; expr = oxexpr_read(a)) {
+                printf(": ");
+                oxexpr_print(expr);
+                printf("\n");
+                
+                printf("= ");
+                //expr = EvalExpression(expr, env);
+                oxexpr_print(expr);
+                printf("\n");
+            }
+
         } else if (argv[idx][0] == '-' && argv[idx][1] == '-' && argv[idx][3] == 0) {
             doOpt = 0;
         } else if (argv[idx][0] == '-' && argv[idx][1] == '-') {

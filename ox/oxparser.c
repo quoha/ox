@@ -13,6 +13,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+oxcell *asname(oxcell *c);
+int     istext(oxcell *c);
+
 // create a copy of a string with the contents reversed.
 //
 // for example:
@@ -355,4 +358,249 @@ const char *oxtok_toktype(oxtoken *t) {
         }
     }
     return "**null**";
+}
+
+static oxcell *nill = 0;
+
+long asinteger(oxcell *c) {
+    return c->u.atom.u.integer;
+}
+
+oxcell *asname(oxcell *c) {
+    return c->u.atom.u.name;
+}
+
+double asreal(oxcell *c) {
+    return c->u.atom.u.real;
+}
+
+const char *astext(oxcell *c) {
+    if (istext(c)) {
+        return c->u.atom.u.text;
+    }
+    return "";
+}
+
+oxcell *car(oxcell *c) {
+    return c->u.cons.car;
+}
+
+oxcell *cdr(oxcell *c) {
+    return c->u.cons.cdr;
+}
+
+int iscons(oxcell *c) {
+    return c->isCons;
+}
+
+int istext(oxcell *c) {
+    return !iscons(c) && c->u.atom.kind == eAtomText;
+}
+
+int isnil(oxcell *c) {
+    return c == nill;
+}
+
+enum atomType type(oxcell *c) {
+    return c->u.atom.kind;
+}
+
+oxcell *oxcell_set_car(oxcell *c, oxcell *t) {
+    c->u.cons.car = t;
+    return c;
+}
+
+oxcell *oxcell_set_cdr(oxcell *c, oxcell *t) {
+    c->u.cons.cdr = t;
+    return c;
+}
+
+oxcell *oxcell_set_integer(oxcell *c, long integer) {
+    oxcell_set_type(c, eAtomInteger);
+    c->isCons = 0;
+    c->u.atom.u.integer = integer;
+    return c;
+}
+
+oxcell *oxcell_set_real(oxcell *c, double real) {
+    oxcell_set_type(c, eAtomReal);
+    c->isCons = 0;
+    c->u.atom.u.real = real;
+    return c;
+}
+
+oxcell *oxcell_set_name(oxcell *c, oxcell *name) {
+    oxcell_set_type(c, eAtomVariable);
+    c->isCons = 0;
+    c->u.atom.u.name = name;
+    return c;
+}
+
+oxcell *oxcell_set_text(oxcell *c, const char *text) {
+    oxcell_set_type(c, eAtomText);
+    c->isCons = 0;
+    c->u.atom.u.text = (char *)text;
+    return c;
+}
+
+oxcell *oxcell_set_type(oxcell *c, enum atomType k) {
+    c->u.atom.kind = k;
+    return c;
+}
+
+oxcell *oxcell_alloc(oxcell *first, oxcell *second) {
+    oxcell *cell = malloc(sizeof(*cell));
+    if (!cell) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    cell->isCons = 1;
+    oxcell_set_car(cell, first );
+    oxcell_set_cdr(cell, second);
+    return cell;
+}
+
+oxcell *oxcell_alloc_cons(oxcell *c, oxcell *t) {
+    return oxcell_alloc(c, t);
+}
+
+oxcell *oxcell_alloc_cstring(const char *cstring) {
+    oxcell *c = oxcell_alloc(nill, nill);
+    oxcell_set_text(c, strdup(cstring));
+    if (!c->u.atom.u.text) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    return c;
+}
+
+oxcell *oxcell_alloc_integer(long integer) {
+    oxcell *c = oxcell_alloc(nill, nill);
+    oxcell_set_integer(c, integer);
+    return c;
+}
+
+oxcell *oxcell_alloc_real(double real) {
+    oxcell *c = oxcell_alloc(nill, nill);
+    oxcell_set_real(c, real);
+    return c;
+}
+
+oxcell *oxcell_alloc_text(const char *text, size_t length) {
+    oxcell *c = oxcell_alloc(nill, nill);
+    oxcell_set_text(c, malloc(length + 1));
+    if (!c->u.atom.u.text) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memcpy(c->u.atom.u.text, text, length);
+    c->u.atom.u.text[length] = 0;
+    return c;
+}
+
+oxcell *oxcell_alloc_variable(const char *name) {
+    oxcell *c = oxcell_alloc(nill, nill);
+    c->isCons = 0;
+    oxcell_set_type(c, eAtomVariable);
+    oxcell_set_name(c, oxcell_alloc_cstring(name));
+    return c;
+}
+
+void oxexpr_print(oxcell *sexp) {
+    if (isnil(sexp)) {
+        printf("()");
+    } else if (iscons(sexp)) {
+        printf("(");
+        oxexpr_print(car(sexp));
+        sexp = cdr(sexp);
+        while (!isnil(sexp) && iscons(sexp)) {
+            printf(" ");
+            oxexpr_print(car(sexp));
+            sexp = cdr(sexp);
+        }
+        printf( ")");
+    } else {
+        switch (type(sexp)) {
+            case eAtomFunc:
+                printf("#CFUNC");
+                break;
+            case eAtomInteger:
+                printf("%ld", asinteger(sexp));
+                break;
+            case eAtomReal:
+                printf("%g", asreal(sexp));
+                break;
+            case eAtomSymbol:
+                printf("#SYMBOL");
+                break;
+            case eAtomText:
+                printf("\"%s\"", astext(sexp));
+                break;
+            case eAtomVariable:
+                printf("%s", astext(asname(sexp)));
+                break;
+        }
+    }
+}
+
+
+oxcell *oxexpr_read(oxbuf *ib) {
+    oxtoken *t = oxtok_read(ib);
+    
+    switch (t->kind) {
+        case oxTokCloseParen:
+            printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+            printf("error:\tunexpected ')' in input\n");
+            exit(1);
+        case oxTokEOF:
+            return 0;
+        case oxTokInteger:
+            return oxcell_alloc_integer(t->value.integer);
+        case oxTokOpenParen:
+            return oxexpr_read_tail(ib);
+        case oxTokReal:
+            return oxcell_alloc_real(t->value.real);
+        case oxTokSymbol:
+            return oxcell_alloc_variable(t->value.name);
+        case oxTokText:
+            return oxcell_alloc_cstring(t->value.text);
+    }
+    
+    if (1) {
+        printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+        printf("error:\tinternal error - unhandled token %d\n", t->kind);
+        exit(2);
+    }
+
+    return 0;
+}
+
+oxcell *oxexpr_read_tail(oxbuf *ib) {
+    oxtoken *t = oxtok_read(ib);
+    switch (t->kind) {
+        case oxTokCloseParen:
+            return nill;
+        case oxTokEOF:
+            printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+            printf("error:\tunexpected end of input\n");
+            exit(1);
+        case oxTokInteger:
+            return oxcell_alloc_cons(oxcell_alloc_integer(t->value.integer), oxexpr_read_tail(ib));
+        case oxTokReal:
+            return oxcell_alloc_cons(oxcell_alloc_real(t->value.real), oxexpr_read_tail(ib));
+        case oxTokOpenParen:
+            return oxcell_alloc_cons(oxexpr_read_tail(ib), oxexpr_read_tail(ib));
+        case oxTokSymbol:
+            return oxcell_alloc_cons(oxcell_alloc_variable(t->value.name), oxexpr_read_tail(ib));
+        case oxTokText:
+            return oxcell_alloc_cons(oxcell_alloc_cstring(t->value.text), oxexpr_read_tail(ib));
+    }
+    
+    if (1) {
+        printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+        printf("error:\tinternal error - unhandled token %d\n", t->kind);
+        exit(2);
+    };
+    
+    return 0;
 }
