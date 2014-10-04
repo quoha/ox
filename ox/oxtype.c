@@ -11,8 +11,8 @@
 
 #define ABEND(x) do { printf(x); printf("\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__); exit(2); } while (0)
 
-int OXISATOM(oxatom *a) {
-    return (a && (a->kind == oxaBoolean || a->kind == oxaInteger || a->kind == oxaReal || a->kind == oxaText)) ? -1 : 0;
+int OXISATOM(oxcell *a) {
+    return (a && a->atom && !(a->first || a->rest)) ? -1 : 0;
 }
 
 int OXASBOOLEAN(oxatom *a) {
