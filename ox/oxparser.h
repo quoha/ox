@@ -24,28 +24,30 @@ typedef struct oxtoken {
     unsigned char data[1];
 } oxtoken;
 
-enum atomType {eAtomFunc, eAtomInteger, eAtomReal, eAtomText, eAtomName};
+enum atomType {eAtomFunc, eAtomInteger, eAtomReal, eAtomText};
+
+typedef struct oxatom {
+    enum atomType    kind;   // kind for atoms
+    struct oxcell *(*func)(struct oxcell *, struct oxcell *);
+    long             integer;// value for integer
+    double           real;   // value for real
+    char            *text;   // text for strings
+} oxatom;
 
 typedef struct oxcell {
-    enum { octAtom, octList, octName } kind;
+    enum { octAtom, octCons, octSymbol } kind;
 
-    struct oxcell *plist;
+    oxatom *atom;
 
-    union {
-        struct {
-            enum atomType kind;   // kind for atoms
-            union {
-                struct oxcell *(*func)(struct oxcell *, struct oxcell *);
-                long             integer;// value for integer
-                double           real;   // value for real
-                char            *text;   // text for strings
-            } u;
-        } atom;
-        struct {
-            struct oxcell *car;
-            struct oxcell *cdr;
-        } cons;
-    }   u;
+    struct {
+        struct oxcell *car;
+        struct oxcell *cdr;
+    } cons;
+
+    struct {
+        struct oxcell *name;
+        struct oxcell *value;
+    } symbol;
 } oxcell;
 
 oxcell *oxexpr_read(struct oxbuf *ib);
@@ -56,27 +58,32 @@ oxcell       *car(oxcell *c);
 oxcell       *cdr(oxcell *c);
 int           isatom(oxcell *c);
 int           iscons(oxcell *c);
-int           isname(oxcell *c);
 int           isnil(oxcell *c);
+int           issymbol(oxcell *c);
 int           istext(oxcell *c);
-enum atomType type(oxcell *c);
 
-oxcell     *oxcell_get_first(oxcell *c);
-oxcell     *oxcell_get_rest(oxcell *c);
+oxatom *oxatom_alloc_integer(long integer);
+oxatom *oxatom_alloc_real(double real);
+oxatom *oxatom_alloc_text(const char *text, size_t length);
+
+oxcell     *oxcell_get_car(oxcell *c);
+oxcell     *oxcell_get_cdr(oxcell *c);
 long        oxcell_get_integer(oxcell *c);
 double      oxcell_get_real(oxcell *c);
-const char *oxcell_get_name(oxcell *c);
+oxcell     *oxcell_get_name(oxcell *c);
 const char *oxcell_get_text(oxcell *c);
+oxcell     *oxcell_get_value(oxcell *c);
 
 oxcell *oxcell_set_car(oxcell *c, oxcell *t);
 oxcell *oxcell_set_cdr(oxcell *c, oxcell *t);
 
-oxcell *oxcell_alloc(oxcell *first, oxcell *second);
-oxcell *oxcell_alloc_cons(oxcell *c, oxcell *t);
+oxcell *oxcell_alloc(oxcell *car, oxcell *cdr);
+oxcell *oxcell_alloc_cons(oxcell *car, oxcell *cdr);
 oxcell *oxcell_alloc_cstring(const char *cstring);
 oxcell *oxcell_alloc_integer(long integer);
 oxcell *oxcell_alloc_real(double real);
 oxcell *oxcell_alloc_text(const char *text, size_t len);
+oxcell *oxcell_alloc_symbol(oxcell *name, oxcell *value);
 
 oxtoken    *oxtok_read(struct oxbuf *ib);
 const char *oxtok_toktype(oxtoken *t);

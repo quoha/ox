@@ -361,20 +361,23 @@ const char *oxtok_toktype(oxtoken *t) {
 
 oxcell *car(oxcell *c) {
     if (c) {
-        return c->u.cons.car;
+        if (c->kind == octCons) {
+            return c->cons.car;
+        }
     }
     return 0;
 }
 
 oxcell *cdr(oxcell *c) {
     if (c) {
-        return c->u.cons.cdr;
+        if (c->kind == octCons) {
+            return c->cons.cdr;
+        }
     }
     return 0;
 }
 
 int isatom(oxcell *c) {
-    //return (c && c->kind == octAtom) ? -1 : 0;
     if (c) {
         if (c->kind == octAtom) {
             return -1;
@@ -392,18 +395,6 @@ int iscons(oxcell *c) {
     return 0;
 }
 
-int isname(oxcell *c) {
-    //return (isatom(c) && c->u.atom.kind == eAtomName) ? -1 : 0;
-    if (c) {
-        if (isatom(c)) {
-            if (c->u.atom.kind == eAtomName) {
-                return -1;
-            }
-        }
-    }
-    return 0;
-}
-
 int isnil(oxcell *c) {
     //return (c == nill) ? -1 : 0;
     if (c == nill) {
@@ -412,11 +403,20 @@ int isnil(oxcell *c) {
     return 0;
 }
 
+int issymbol(oxcell *c) {
+    if (c) {
+        if (c->kind == octSymbol) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
 int istext(oxcell *c) {
     //return (c && isatom(c) && c->u.atom.kind == eAtomText) ? -1 : 0;
     if (c) {
         if (isatom(c)) {
-            if (c->u.atom.kind == eAtomText) {
+            if (c->atom->kind == eAtomText) {
                 return -1;
             }
         }
@@ -424,87 +424,170 @@ int istext(oxcell *c) {
     return 0;
 }
 
-enum atomType type(oxcell *c) {
-    return c->u.atom.kind;
-}
-
-oxcell *oxcell_get_first(oxcell *c) {
+oxcell *oxcell_get_car(oxcell *c) {
     if (iscons(c)) {
-        return c->u.cons.car;
+        return c->cons.car;
     }
     return 0;
 }
 
-oxcell *oxcell_get_rest(oxcell *c) {
+oxcell *oxcell_get_cdr(oxcell *c) {
     if (iscons(c)) {
-        return c->u.cons.cdr;
+        return c->cons.cdr;
     }
     return 0;
 }
 
 long oxcell_get_integer(oxcell *c) {
     if (c) {
-        return c->u.atom.u.integer;
+        if (c->kind == octAtom) {
+            if (c->atom->kind == eAtomInteger) {
+                return c->atom->integer;
+            }
+        }
     }
     return 0;
 }
 
-const char *oxcell_get_name(oxcell *c) {
-    if (isname(c)) {
-        return c->u.atom.u.text;
+oxcell *oxcell_get_name(oxcell *c) {
+    if (issymbol(c)) {
+        return c->symbol.name;
     }
-    return "";
+    return nill;
 }
 
 double oxcell_get_real(oxcell *c) {
     if (c) {
-        return c->u.atom.u.real;
+        if (c->kind == octAtom) {
+            if (c->atom->kind == eAtomReal) {
+                return c->atom->real;
+            }
+        }
     }
     return 0.0;
 }
 
 const char *oxcell_get_text(oxcell *c) {
-    if (istext(c)) {
-        return c->u.atom.u.text;
+    if (c) {
+        if (c->kind == octAtom) {
+            if (c->atom->kind == eAtomText) {
+                return c->atom->text;
+            }
+        }
     }
     return "";
 }
 
+oxcell *oxcell_get_value(oxcell *c) {
+    if (issymbol(c)) {
+        if (c->symbol.value) {
+            return c->symbol.value;
+        }
+        printf("error: internal error - getValue on unresolved symbol");
+        exit(2);
+    }
+    return nill;
+}
+
 oxcell *oxcell_set_car(oxcell *c, oxcell *t) {
-    c->u.cons.car = t;
+    if (c) {
+        if (c->kind == octCons) {
+            c->cons.car = t;
+        }
+    }
+    printf("error: internal error - setCar on non cons");
+    exit(2);
     return c;
 }
 
 oxcell *oxcell_set_cdr(oxcell *c, oxcell *t) {
-    c->u.cons.cdr = t;
+    if (c) {
+        if (c->kind == octCons) {
+            c->cons.cdr = t;
+        }
+    }
+    printf("error: internal error - setCdr on non cons");
+    exit(2);
     return c;
 }
 
-oxcell *oxcell_alloc(oxcell *first, oxcell *second) {
+oxatom *oxatom_alloc_integer(long integer) {
+    oxatom *a = malloc(sizeof(*a));
+    if (!a) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memset(a, 0, sizeof(*a));
+    
+    a->kind    = eAtomInteger;
+    a->func    = 0;
+    a->integer = integer;
+    a->real    = 0.0;
+    a->text    = 0;
+
+    return a;
+}
+
+oxatom *oxatom_alloc_text(const char *text, size_t length) {
+    oxatom *a = malloc(sizeof(*a));
+    if (!a) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memset(a, 0, sizeof(*a));
+
+    a->kind    = eAtomText;
+    a->func    = 0;
+    a->integer = 0;
+    a->real    = 0.0;
+    a->text    = malloc(length + 1);
+    
+    if (!a->text) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memcpy(a->text, text, length);
+    a->text[length] = 0;
+    return a;
+}
+
+oxatom *oxatom_alloc_real(double real) {
+    oxatom *a = malloc(sizeof(*a));
+    if (!a) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memset(a, 0, sizeof(*a));
+    
+    a->kind    = eAtomReal;
+    a->func    = 0;
+    a->integer = 0;
+    a->real    = real;
+    a->text    = 0;
+    
+    return a;
+}
+
+
+oxcell *oxcell_alloc(oxcell *car, oxcell *cdr) {
     oxcell *c = malloc(sizeof(*c));
     if (!c) {
         perror(__FUNCTION__);
         exit(2);
     }
-    memset(c, 0, sizeof(*c));
-    c->kind  = octList;
-    c->plist = nill;
-    oxcell_set_car(c, first );
-    oxcell_set_cdr(c, second);
+
+    c->kind         = octCons;
+    c->atom         = 0;
+    c->cons.car     = car;
+    c->cons.cdr     = cdr;
+    c->symbol.name  = 0;
+    c->symbol.value = 0;
+    
     return c;
 }
 
-oxcell *oxcell_alloc_cons(oxcell *first, oxcell *rest) {
-    oxcell *c = malloc(sizeof(*c));
-    if (!c) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
-    c->kind  = octList;
-    c->plist = nill;
-    oxcell_set_car(c, first);
-    oxcell_set_cdr(c, rest);
-    return c;
+oxcell *oxcell_alloc_cons(oxcell *car, oxcell *cdr) {
+    return oxcell_alloc(car, cdr);
 }
 
 oxcell *oxcell_alloc_cstring(const char *cstring) {
@@ -512,52 +595,57 @@ oxcell *oxcell_alloc_cstring(const char *cstring) {
 }
 
 oxcell *oxcell_alloc_integer(long integer) {
-    oxcell *c           = oxcell_alloc(nill, nill);
+    oxcell *c           = oxcell_alloc(0, 0);
     c->kind             = octAtom;
-    c->plist            = nill;
-    c->u.atom.kind      = eAtomInteger;
-    c->u.atom.u.integer = integer;
-
-    return c;
-}
-
-oxcell *oxcell_alloc_name(const char *name) {
-    oxcell *c        = oxcell_alloc_text(name, strlen(name));
-    c->u.atom.kind   = eAtomName;
+    c->atom             = oxatom_alloc_integer(integer);
     return c;
 }
 
 oxcell *oxcell_alloc_real(double real) {
-    oxcell *c        = oxcell_alloc(nill, nill);
-    c->kind          = octAtom;
-    c->plist         = nill;
-    c->u.atom.kind   = eAtomReal;
-    c->u.atom.u.real = real;
+    oxcell *c           = oxcell_alloc(0, 0);
+    c->kind             = octAtom;
+    c->atom             = oxatom_alloc_real(real);
     return c;
 }
 
 oxcell *oxcell_alloc_text(const char *text, size_t length) {
-    oxcell *c        = oxcell_alloc(nill, nill);
-    c->kind          = octAtom;
-    c->plist         = nill;
-    c->u.atom.kind   = eAtomText;
-    c->u.atom.u.text = malloc(length + 1);
-
-    if (!c->u.atom.u.text) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
-    memcpy(c->u.atom.u.text, text, length);
-    c->u.atom.u.text[length] = 0;
-
+    oxcell *c           = oxcell_alloc(0, 0);
+    c->kind             = octAtom;
+    c->atom             = oxatom_alloc_text(text, length);
     return c;
 }
+
+oxcell *oxcell_alloc_symbol(oxcell *name, oxcell *value) {
+    oxcell *c       = oxcell_alloc(0, 0);
+    c->kind         = octSymbol;
+    c->symbol.name  = name;
+    c->symbol.value = value;
+    return c;
+}
+
 
 void oxexpr_print(oxcell *sexp) {
     if (!sexp) {
         // do nothing?
     } else if (isnil(sexp)) {
         printf("()");
+    } else if (isatom(sexp)) {
+        switch (sexp->atom->kind) {
+            case eAtomFunc:
+                printf("#CFUNC");
+                break;
+            case eAtomInteger:
+                printf("%ld", oxcell_get_integer(sexp));
+                break;
+            case eAtomReal:
+                printf("%g", oxcell_get_real(sexp));
+                break;
+            case eAtomText:
+                printf("\"%s\"", oxcell_get_text(sexp));
+                break;
+        }
+    } else if (issymbol(sexp)) {
+        printf("%s", oxcell_get_text(oxcell_get_name(sexp)));
     } else if (iscons(sexp)) {
         printf("(");
         oxexpr_print(car(sexp));
@@ -569,23 +657,8 @@ void oxexpr_print(oxcell *sexp) {
         }
         printf( ")");
     } else {
-        switch (type(sexp)) {
-            case eAtomFunc:
-                printf("#CFUNC");
-                break;
-            case eAtomInteger:
-                printf("%ld", oxcell_get_integer(sexp));
-                break;
-            case eAtomName:
-                printf("%s", oxcell_get_name(sexp));
-                break;
-            case eAtomReal:
-                printf("%g", oxcell_get_real(sexp));
-                break;
-            case eAtomText:
-                printf("\"%s\"", oxcell_get_text(sexp));
-                break;
-        }
+        printf("error: internal error - cell not atom/list/symbol\n");
+        exit(2);
     }
 }
 
@@ -607,7 +680,7 @@ oxcell *oxexpr_read(oxbuf *ib) {
         case oxTokReal:
             return oxcell_alloc_real(t->value.real);
         case oxTokName:
-            return oxcell_alloc_name(t->value.name);
+            return oxcell_alloc_symbol(oxcell_alloc_text(t->value.name, strlen(t->value.name)), 0);
         case oxTokText:
             return oxcell_alloc_cstring(t->value.text);
     }
@@ -637,7 +710,7 @@ oxcell *oxexpr_read_tail(oxbuf *ib) {
         case oxTokOpenParen:
             return oxcell_alloc_cons(oxexpr_read_tail(ib), oxexpr_read_tail(ib));
         case oxTokName:
-            return oxcell_alloc_cons(oxcell_alloc_name(t->value.name), oxexpr_read_tail(ib));
+            return oxcell_alloc_cons(oxcell_alloc_symbol(oxcell_alloc_text(t->value.name, strlen(t->value.name)), 0), oxexpr_read_tail(ib));
         case oxTokText:
             return oxcell_alloc_cons(oxcell_alloc_cstring(t->value.text), oxexpr_read_tail(ib));
     }
