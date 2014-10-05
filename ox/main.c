@@ -14,6 +14,7 @@
 int main(int argc, const char * argv[]) {
     int debugLevel = 0;
     int doCheck    = 0;
+    int doEval     = 1;
     int doOpt      = 1;
     int idx;
 
@@ -28,7 +29,7 @@ int main(int argc, const char * argv[]) {
                 perror(argv[idx]);
                 return 0;
             }
-            if (doCheck > 5) {
+            if (doCheck) {
                 oxtoken *t;
                 for (t = oxtok_read(a); t && t->kind != oxTokEOF; t = oxtok_read(a)) {
                     printf("%5d: %s %s\n", t->line, oxtok_toktype(t), t->data);
@@ -37,22 +38,22 @@ int main(int argc, const char * argv[]) {
                 if (t) {
                     free(t);
                 }
-                return 0;
             }
 
-            // execute the script
-            oxcell *expr;
-            for (expr = oxexpr_read(a); expr; expr = oxexpr_read(a)) {
-                printf(": ");
-                oxexpr_print(expr);
-                printf("\n");
-                
-                printf("= ");
-                //expr = EvalExpression(expr, env);
-                oxexpr_print(expr);
-                printf("\n");
+            if (doEval) {
+                // eval the script
+                oxcell *expr;
+                for (expr = oxexpr_read(a); expr; expr = oxexpr_read(a)) {
+                    printf(": ");
+                    oxexpr_print(expr);
+                    printf("\n");
+                    
+                    printf("= ");
+                    //expr = EvalExpression(expr, env);
+                    oxexpr_print(expr);
+                    printf("\n");
+                }
             }
-
         } else if (argv[idx][0] == '-' && argv[idx][1] == '-' && argv[idx][3] == 0) {
             doOpt = 0;
         } else if (argv[idx][0] == '-' && argv[idx][1] == '-') {
@@ -74,7 +75,11 @@ int main(int argc, const char * argv[]) {
             if (!strcmp(opt, "--help")) {
                 return 0;
             } else if (!strcmp(opt, "--check-file")) {
-                doCheck++;
+                doCheck = -1;
+                doEval  =  0;
+            } else if (!strcmp(opt, "--eval-file")) {
+                doCheck =  0;
+                doEval  = -1;
             } else if (!strcmp(opt, "--debug")) {
                 debugLevel++;
             } else {

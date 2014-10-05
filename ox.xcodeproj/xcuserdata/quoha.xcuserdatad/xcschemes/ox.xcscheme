@@ -66,6 +66,14 @@
             argument = "/Users/quoha/Data/data/ox/ihopdw002326bw.ox"
             isEnabled = "YES">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--eval-file"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/quoha/Data/data/ox/lisp.ox"
+            isEnabled = "YES">
+         </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
