@@ -8,50 +8,40 @@
 #ifndef __ox__oxtype__
 #define __ox__oxtype__
 
-#include <stdlib.h>
+enum atomType {eAtomFunc, eAtomInteger, eAtomReal, eAtomText, eAtomTime};
 
-// obviously not worried about code size or speed at the moment
-//
 typedef struct oxatom {
-    enum { oxaBoolean, oxaInteger, oxaReal, oxaSymbol, oxaText } kind;
-    int          isNull;
-    int          boolean;
-    struct {
-        int          integer;
-        double       real;
-    }            number;
-    struct {
-        struct oxatom *name;
-        struct oxcell *plist;
-    }            symbol;
-    struct {
-        char        *value;
-        ssize_t      length;
-    }            text;
-    unsigned char data[1];
+    enum atomType    kind;      // kind for atoms
+    struct oxcell *(*func)(struct oxcell *, struct oxcell *);
+    long             integer;   // value for integer
+    double           real;      // value for real
+    char            *text;      // text for strings
+    unsigned long    timestamp; // time values
 } oxatom;
 
-// if atom is set, then this is an atom
-// if first is set, then this is a list
-// if a list and rest is NULL, then this is the end of the list
-//
 typedef struct oxcell {
-    struct oxatom *atom;
-    struct oxatom *first;
-    struct oxcell *rest;
+    enum { octAtom, octCons } kind;
+    
+    oxatom   *atom;
+    int       isSymbol;
+    
+    struct {
+        struct oxcell *car;
+        struct oxcell *cdr;
+    } cons;
 } oxcell;
 
-int         OXISATOM(oxcell *c);
-int         OXISBOOLEAN(oxatom *a);
-int         OXISINTEGER(oxatom *a);
-int         OXISNUMBER(oxatom *a);
-int         OXISREAL(oxatom *a);
-int         OXISSYMBOL(oxatom *a);
-int         OXISTEXT(oxatom *a);
+typedef struct oxtoken {
+    union {
+        long   integer;
+        char  *name;
+        double real;
+        char  *text;
+    } value;
+    enum {oxTokEOF, oxTokOpenParen, oxTokCloseParen, oxTokInteger, oxTokName, oxTokReal, oxTokText} kind;
+    int line;
+    unsigned char data[1];
+} oxtoken;
 
-int         OXASINTEGER(oxatom *a);
-void        OSASNUMBER(oxatom *a);
-double      OXASREAL(oxatom *a);
-const char *OXASTEXT(oxatom *a);
 
 #endif /* defined(__ox__oxtype__) */

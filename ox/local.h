@@ -8,11 +8,4 @@
 #ifndef ox_local_h
 #define ox_local_h
 
-#include <stdlib.h>
-
-#include "oxbuf.h"
-#include "oxdeq.h"
-#include "oxval.h"
-#include "oxchunk.h"
-
 #endif

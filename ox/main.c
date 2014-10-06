@@ -5,11 +5,15 @@
 //  Copyright (c) 2014 Michael D Henderson. All rights reserved.
 //
 
-#include "local.h"
+#include "oxtype.h"
+#include "oxeval.h"
+#include "oxinit.h"
 #include "oxparser.h"
+#include "oxprint.h"
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 int main(int argc, const char * argv[]) {
     int debugLevel = 0;
@@ -47,14 +51,14 @@ int main(int argc, const char * argv[]) {
                 oxcell *expr;
                 for (expr = oxexpr_read(a); expr; expr = oxexpr_read(a)) {
                     printf(": ");
-                    oxexpr_print(expr);
+                    oxcell_print(expr);
                     printf("\n");
                     
                     oxcell *env    = myEnv;
                     oxcell *result = oxeval(expr, env);
 
                     printf("= ");
-                    oxexpr_print(result);
+                    oxcell_print(result);
                     printf("\n");
                 }
             }
