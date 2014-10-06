@@ -13,7 +13,27 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-static oxcell *nill = 0;
+oxcell *nill   = 0;
+oxcell *myEnv  = 0;
+
+int oxinit(void) {
+    if (!nill) {
+        nill = oxcell_alloc();
+        nill->cons.car = nill;
+        nill->cons.cdr = nill;
+    }
+
+    // add the built ins to the environment
+    //
+    myEnv = oxcell_alloc_cons(oxcell_alloc_symbol(oxcell_alloc_cstring("car"   ), oxcell_alloc_func(oxf_car   )), nill );
+    myEnv = oxcell_alloc_cons(oxcell_alloc_symbol(oxcell_alloc_cstring("cdr"   ), oxcell_alloc_func(oxf_cdr   )), myEnv);
+    myEnv = oxcell_alloc_cons(oxcell_alloc_symbol(oxcell_alloc_cstring("cons"  ), oxcell_alloc_func(oxf_cons  )), myEnv);
+    myEnv = oxcell_alloc_cons(oxcell_alloc_symbol(oxcell_alloc_cstring("lambda"), oxcell_alloc_func(oxf_lambda)), myEnv);
+    myEnv = oxcell_alloc_cons(oxcell_alloc_symbol(oxcell_alloc_cstring("noop"  ), oxcell_alloc_func(oxf_noop  )), myEnv);
+    myEnv = oxcell_alloc_cons(oxcell_alloc_symbol(oxcell_alloc_cstring("quote" ), oxcell_alloc_func(oxf_quote )), myEnv);
+
+    return -1;
+}
 
 // create a copy of a string with the contents reversed.
 //
@@ -405,15 +425,16 @@ int isnil(oxcell *c) {
 
 int issymbol(oxcell *c) {
     if (c) {
-        if (c->kind == octSymbol) {
-            return -1;
+        if (c->kind == octCons) {
+            if (c->isSymbol) {
+                return -1;
+            }
         }
     }
     return 0;
 }
 
 int istext(oxcell *c) {
-    //return (c && isatom(c) && c->u.atom.kind == eAtomText) ? -1 : 0;
     if (c) {
         if (isatom(c)) {
             if (c->atom->kind == eAtomText) {
@@ -451,7 +472,7 @@ long oxcell_get_integer(oxcell *c) {
 
 oxcell *oxcell_get_name(oxcell *c) {
     if (issymbol(c)) {
-        return c->symbol.name;
+        return oxcell_get_car(c);
     }
     return nill;
 }
@@ -478,13 +499,20 @@ const char *oxcell_get_text(oxcell *c) {
     return "";
 }
 
+unsigned long oxcell_get_timestamp(oxcell *c) {
+    if (c) {
+        if (c->kind == octAtom) {
+            if (c->atom->kind == eAtomTime) {
+                return c->atom->real;
+            }
+        }
+    }
+    return 0;
+}
+
 oxcell *oxcell_get_value(oxcell *c) {
     if (issymbol(c)) {
-        if (c->symbol.value) {
-            return c->symbol.value;
-        }
-        printf("error: internal error - getValue on unresolved symbol");
-        exit(2);
+        return oxcell_get_cdr(c);
     }
     return nill;
 }
@@ -493,10 +521,14 @@ oxcell *oxcell_set_car(oxcell *c, oxcell *t) {
     if (c) {
         if (c->kind == octCons) {
             c->cons.car = t;
+            return t;
         }
     }
-    printf("error: internal error - setCar on non cons");
-    exit(2);
+
+    if (1) {
+        printf("error: internal error - setCar on non cons");
+        exit(2);
+    }
     return c;
 }
 
@@ -504,72 +536,18 @@ oxcell *oxcell_set_cdr(oxcell *c, oxcell *t) {
     if (c) {
         if (c->kind == octCons) {
             c->cons.cdr = t;
+            return t;
         }
     }
-    printf("error: internal error - setCdr on non cons");
-    exit(2);
+
+    if (1) {
+        printf("error: internal error - setCdr on non cons");
+        exit(2);
+    }
     return c;
 }
 
-oxatom *oxatom_alloc_integer(long integer) {
-    oxatom *a = malloc(sizeof(*a));
-    if (!a) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
-    memset(a, 0, sizeof(*a));
-    
-    a->kind    = eAtomInteger;
-    a->func    = 0;
-    a->integer = integer;
-    a->real    = 0.0;
-    a->text    = 0;
-
-    return a;
-}
-
-oxatom *oxatom_alloc_text(const char *text, size_t length) {
-    oxatom *a = malloc(sizeof(*a));
-    if (!a) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
-    memset(a, 0, sizeof(*a));
-
-    a->kind    = eAtomText;
-    a->func    = 0;
-    a->integer = 0;
-    a->real    = 0.0;
-    a->text    = malloc(length + 1);
-    
-    if (!a->text) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
-    memcpy(a->text, text, length);
-    a->text[length] = 0;
-    return a;
-}
-
-oxatom *oxatom_alloc_real(double real) {
-    oxatom *a = malloc(sizeof(*a));
-    if (!a) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
-    memset(a, 0, sizeof(*a));
-    
-    a->kind    = eAtomReal;
-    a->func    = 0;
-    a->integer = 0;
-    a->real    = real;
-    a->text    = 0;
-    
-    return a;
-}
-
-
-oxcell *oxcell_alloc(oxcell *car, oxcell *cdr) {
+oxcell *oxcell_alloc(void) {
     oxcell *c = malloc(sizeof(*c));
     if (!c) {
         perror(__FUNCTION__);
@@ -578,51 +556,143 @@ oxcell *oxcell_alloc(oxcell *car, oxcell *cdr) {
 
     c->kind         = octCons;
     c->atom         = 0;
-    c->cons.car     = car;
-    c->cons.cdr     = cdr;
-    c->symbol.name  = 0;
-    c->symbol.value = 0;
+    c->isSymbol     = 0;
+    c->cons.car     = 0;
+    c->cons.cdr     = 0;
     
     return c;
 }
 
 oxcell *oxcell_alloc_cons(oxcell *car, oxcell *cdr) {
-    return oxcell_alloc(car, cdr);
+    oxcell *c = oxcell_alloc();
+    oxcell_set_car(c, car);
+    oxcell_set_cdr(c, cdr);
+    return c;
 }
 
 oxcell *oxcell_alloc_cstring(const char *cstring) {
     return oxcell_alloc_text(cstring, strlen(cstring));
 }
 
-oxcell *oxcell_alloc_integer(long integer) {
-    oxcell *c           = oxcell_alloc(0, 0);
+oxcell *oxcell_alloc_func(oxcell *(func)(oxcell *arg, oxcell *env)) {
+    oxcell *c           = oxcell_alloc();
     c->kind             = octAtom;
-    c->atom             = oxatom_alloc_integer(integer);
+
+    c->atom = malloc(sizeof(*(c->atom)));
+    if (!c->atom) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memset(c->atom, 0, sizeof(*(c->atom)));
+
+    c->atom->kind      = eAtomFunc;
+    c->atom->func      = func;
+    c->atom->integer   = 0;
+    c->atom->real      = 0.0;
+    c->atom->text      = 0;
+    c->atom->timestamp = 0;
+
+    return c;
+}
+
+oxcell *oxcell_alloc_integer(long integer) {
+    oxcell *c           = oxcell_alloc();
+    c->kind             = octAtom;
+
+    c->atom = malloc(sizeof(*(c->atom)));
+    if (!c->atom) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memset(c->atom, 0, sizeof(*(c->atom)));
+    
+    c->atom->kind      = eAtomInteger;
+    c->atom->func      = 0;
+    c->atom->integer   = integer;
+    c->atom->real      = 0.0;
+    c->atom->text      = 0;
+    c->atom->timestamp = 0;
+    
     return c;
 }
 
 oxcell *oxcell_alloc_real(double real) {
-    oxcell *c           = oxcell_alloc(0, 0);
+    oxcell *c           = oxcell_alloc();
     c->kind             = octAtom;
-    c->atom             = oxatom_alloc_real(real);
+
+    c->atom = malloc(sizeof(*(c->atom)));
+    if (!c->atom) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memset(c->atom, 0, sizeof(*(c->atom)));
+    
+    c->atom->kind      = eAtomReal;
+    c->atom->func      = 0;
+    c->atom->real      = real;
+    c->atom->real      = 0.0;
+    c->atom->text      = 0;
+    c->atom->timestamp = 0;
+
     return c;
 }
 
 oxcell *oxcell_alloc_text(const char *text, size_t length) {
-    oxcell *c           = oxcell_alloc(0, 0);
+    oxcell *c           = oxcell_alloc();
     c->kind             = octAtom;
-    c->atom             = oxatom_alloc_text(text, length);
+
+    c->atom = malloc(sizeof(*(c->atom)));
+    if (!c->atom) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memset(c->atom, 0, sizeof(*(c->atom)));
+
+    c->atom->kind      = eAtomText;
+    c->atom->func      = 0;
+    c->atom->integer   = 0;
+    c->atom->real      = 0.0;
+    c->atom->text      = malloc(length + 1);
+    c->atom->timestamp = 0;
+
+    if (!c->atom->text) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memcpy(c->atom->text, text, length);
+    c->atom->text[length] = 0;
+
+    return c;
+}
+
+oxcell *oxcell_alloc_timestamp(unsigned long timestamp) {
+    oxcell *c           = oxcell_alloc();
+    c->kind             = octAtom;
+    
+    c->atom = malloc(sizeof(*(c->atom)));
+    if (!c->atom) {
+        perror(__FUNCTION__);
+        exit(2);
+    }
+    memset(c->atom, 0, sizeof(*(c->atom)));
+    
+    c->atom->kind      = eAtomTime;
+    c->atom->func      = 0;
+    c->atom->integer   = 0;
+    c->atom->real      = 0.0;
+    c->atom->text      = 0;
+    c->atom->timestamp = timestamp;
+    
     return c;
 }
 
 oxcell *oxcell_alloc_symbol(oxcell *name, oxcell *value) {
-    oxcell *c       = oxcell_alloc(0, 0);
-    c->kind         = octSymbol;
-    c->symbol.name  = name;
-    c->symbol.value = value;
+    oxcell *c   = oxcell_alloc();
+    c->isSymbol = -1;
+    oxcell_set_car(c, name);
+    oxcell_set_cdr(c, value);
     return c;
 }
-
 
 void oxexpr_print(oxcell *sexp) {
     if (!sexp) {
@@ -633,19 +703,23 @@ void oxexpr_print(oxcell *sexp) {
         switch (sexp->atom->kind) {
             case eAtomFunc:
                 printf("#CFUNC");
-                break;
+                return;
             case eAtomInteger:
                 printf("%ld", oxcell_get_integer(sexp));
-                break;
+                return;
             case eAtomReal:
                 printf("%g", oxcell_get_real(sexp));
-                break;
+                return;
             case eAtomText:
                 printf("\"%s\"", oxcell_get_text(sexp));
-                break;
+                return;
+            case eAtomTime:
+                printf("*time*");
+                return;
         }
     } else if (issymbol(sexp)) {
         printf("%s", oxcell_get_text(oxcell_get_name(sexp)));
+        return;
     } else if (iscons(sexp)) {
         printf("(");
         oxexpr_print(car(sexp));
@@ -656,10 +730,10 @@ void oxexpr_print(oxcell *sexp) {
             sexp = cdr(sexp);
         }
         printf( ")");
-    } else {
-        printf("error: internal error - cell not atom/list/symbol\n");
-        exit(2);
+        return;
     }
+    printf("error: internal error - cell not atom/list/symbol\n");
+    exit(2);
 }
 
 
@@ -723,3 +797,137 @@ oxcell *oxexpr_read_tail(oxbuf *ib) {
     
     return 0;
 }
+
+oxcell *oxf_car(oxcell *args, oxcell *env) {
+    if (args) {
+        if (args->kind == octCons) {
+            return args->cons.car;
+        }
+    }
+    return 0;
+}
+
+oxcell *oxf_cdr(oxcell *args, oxcell *env) {
+    if (args) {
+        if (args->kind == octCons) {
+            return args->cons.cdr;
+        }
+    }
+    return 0;
+}
+
+oxcell *oxf_cons(oxcell *args, oxcell *env) {
+    oxcell *car = oxf_car(args, env);
+    oxcell *cdr = oxf_car(oxf_cdr(args, env), env);
+    oxcell *c   = oxcell_alloc();
+    oxcell_set_car(c, car);
+    oxcell_set_cdr(c, cdr);
+    return c;
+}
+
+oxcell *oxf_lambda(oxcell *args, oxcell *env) {
+    return nill;
+}
+
+oxcell *oxf_noop(oxcell *args, oxcell *env) {
+    return nill;
+}
+
+oxcell *oxf_quote(oxcell *args, oxcell *env) {
+    return nill;
+}
+
+int oxcell_eq_text(oxcell *c1, oxcell *c2) {
+    if (c1 && c2) {
+        if (isatom(c1) && isatom(c2)) {
+            if (istext(c1) && istext(c2)) {
+                if (c1 != nill && c2 != nill) {
+                    const char *p1 = oxcell_get_text(c1);
+                    const char *p2 = oxcell_get_text(c2);
+                    if (p1 && p2) {
+                        if (p1 == p2) {
+                            return -1;
+                        } else if (strcmp(p1, p2) == 0) {
+                            return -1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+oxcell *oxsym_lookup(oxcell *name, oxcell *env) {
+    for (; env != nill; env = oxcell_get_cdr(env)) {
+        oxcell *entry = oxcell_get_car(env);
+        if (issymbol(entry)) {
+            if (oxcell_eq_text(name, oxcell_get_name(entry))) {
+                return entry;
+            }
+        }
+    }
+
+    return nill;
+}
+
+oxcell *oxeval_atom(oxcell *c, oxcell *env) {
+    if (isnil(c)) {
+        return nill;
+    } else if (isatom(c)) {
+        return c;
+    }
+    return nill;
+}
+
+oxcell *oxeval(oxcell *expr, oxcell *env) {
+    if (isatom(expr)) {
+        return oxeval_atom(expr, env);
+    }
+
+    oxcell *symbol = oxcell_get_car(expr);
+    oxcell *args   = oxcell_get_cdr(expr);
+
+    if (issymbol(symbol)) {
+        printf(".eval: %s, how cute\n", oxcell_get_text(oxcell_get_name(symbol)));
+        // do we need to lookup the symbol?
+        //
+        if (!symbol->cons.cdr) {
+            oxcell *lookup = oxsym_lookup(oxcell_get_name(symbol), env);
+            if (!lookup || lookup == nill) {
+                printf("error: undefined symbol '%s'\n", oxcell_get_text(oxcell_get_name(symbol)));
+                exit(2);
+            }
+            symbol = lookup;
+        }
+    } else if (iscons(symbol)) {
+        // symbol will be the result of evaluating the list
+        //
+        symbol = oxeval(symbol, env);
+        if (!issymbol(symbol)) {
+            // the expression didn't return something that we can execute
+            //
+        }
+    }
+
+    // symbol should either be a built-in or a lamba
+    //
+    oxcell *l = oxcell_get_cdr(symbol);
+    if (!isatom(l)) {
+        printf("error: can't execute a list\n");
+        exit(2);
+    }
+    
+    if (l->atom->kind == eAtomFunc) {
+        printf(".info: executing builtin\n");
+        return l->atom->func(args, env);
+    }
+
+    if (1) {
+        printf("error: don't know how to execute symbol\n");
+        exit(2);
+    }
+
+    return nill;
+}
+

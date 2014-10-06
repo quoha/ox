@@ -18,6 +18,8 @@ int main(int argc, const char * argv[]) {
     int doOpt      = 1;
     int idx;
 
+    oxinit();
+    
     oxbuf *a = 0;
 
     for (idx = 1; idx < argc; idx++) {
@@ -48,9 +50,11 @@ int main(int argc, const char * argv[]) {
                     oxexpr_print(expr);
                     printf("\n");
                     
+                    oxcell *env    = myEnv;
+                    oxcell *result = oxeval(expr, env);
+
                     printf("= ");
-                    //expr = EvalExpression(expr, env);
-                    oxexpr_print(expr);
+                    oxexpr_print(result);
                     printf("\n");
                 }
             }
