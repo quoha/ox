@@ -4,7 +4,7 @@
 //  Created by Michael Henderson on 10/6/14.
 //  Copyright (c) 2014 Michael D Henderson. All rights reserved.
 //
-
+#if 0
 #include "oxalloc.h"
 #include "oxinit.h"
 #include "oxutil.h"
@@ -33,36 +33,9 @@ unsigned char *strrcpy(unsigned char *src, size_t length) {
     return tgt;
 }
 
-oxcell *car(oxcell *c) {
-    if (c) {
-        if (c->kind == octCons) {
-            return c->cons.car;
-        }
-    }
-    return 0;
-}
-
-oxcell *cdr(oxcell *c) {
-    if (c) {
-        if (c->kind == octCons) {
-            return c->cons.cdr;
-        }
-    }
-    return 0;
-}
-
 int isatom(oxcell *c) {
     if (c) {
         if (c->kind == octAtom) {
-            return -1;
-        }
-    }
-    return 0;
-}
-
-int iscons(oxcell *c) {
-    if (c) {
-        if (!isatom(c)) {
             return -1;
         }
     }
@@ -79,16 +52,29 @@ int islist(oxcell *c) {
 }
 
 int isnil(oxcell *c) {
-    //return (c == nill) ? -1 : 0;
-    if (c == nill) {
+    if (c == oxnil) {
         return -1;
+    }
+    return 0;
+}
+
+int isNumber(oxcell *c) {
+    if (c) {
+        if (isatom(c)) {
+            if (c->atom->kind == eAtomInteger) {
+                return -1;
+            }
+            if (c->atom->kind == eAtomReal) {
+                return -1;
+            }
+        }
     }
     return 0;
 }
 
 int issymbol(oxcell *c) {
     if (c) {
-        if (c->kind == octCons) {
+        if (!isatom(c)) {
             if (c->isSymbol) {
                 return -1;
             }
@@ -108,18 +94,18 @@ int istext(oxcell *c) {
     return 0;
 }
 
-oxcell *oxcell_get_car(oxcell *c) {
-    if (iscons(c)) {
-        return c->cons.car;
+oxcell *oxcell_get_first(oxcell *c) {
+    if (!isatom(c)) {
+        return c->first ? c->first : oxnil;
     }
-    return 0;
+    return oxnil;
 }
 
-oxcell *oxcell_get_cdr(oxcell *c) {
-    if (iscons(c)) {
-        return c->cons.cdr;
+oxcell *oxcell_get_rest(oxcell *c) {
+    if (!isatom(c)) {
+        return c->rest ? c->rest : oxnil;
     }
-    return 0;
+    return oxnil;
 }
 
 long oxcell_get_integer(oxcell *c) {
@@ -135,9 +121,9 @@ long oxcell_get_integer(oxcell *c) {
 
 oxcell *oxcell_get_name(oxcell *c) {
     if (issymbol(c)) {
-        return oxcell_get_car(c);
+        return oxcell_get_first(c);
     }
-    return nill;
+    return oxnil;
 }
 
 double oxcell_get_real(oxcell *c) {
@@ -175,16 +161,16 @@ unsigned long oxcell_get_timestamp(oxcell *c) {
 
 oxcell *oxcell_get_value(oxcell *c) {
     if (issymbol(c)) {
-        return oxcell_get_cdr(c);
+        return oxcell_get_rest(c);
     }
-    return nill;
+    return oxnil;
 }
 
-oxcell *oxcell_set_car(oxcell *c, oxcell *t) {
+oxcell *oxcell_set_first(oxcell *c, oxcell *first) {
     if (c) {
-        if (c->kind == octCons) {
-            c->cons.car = t;
-            return t;
+        if (c->kind == octList) {
+            c->first = first;
+            return c->first;
         }
     }
     
@@ -195,11 +181,11 @@ oxcell *oxcell_set_car(oxcell *c, oxcell *t) {
     return c;
 }
 
-oxcell *oxcell_set_cdr(oxcell *c, oxcell *t) {
+oxcell *oxcell_set_rest(oxcell *c, oxcell *rest) {
     if (c) {
-        if (c->kind == octCons) {
-            c->cons.cdr = t;
-            return t;
+        if (c->kind == octList) {
+            c->rest = rest;
+            return c->rest;
         }
     }
     
@@ -210,9 +196,38 @@ oxcell *oxcell_set_cdr(oxcell *c, oxcell *t) {
     return c;
 }
 
+//   ((key value) (key value))
+//   first|rest -> first|rest -> nill
+//     |             |
+//     |             v
+//     |           first|rest -> first|rest -> nill
+//     |             |             |
+//     |             v             v
+//     |            key          value
+//     |
+//     v
+//   first|rest -> first|rest -> nill
+//     |             |
+//     v             v
+//    key          value
+//
+oxcell *oxassoc_find_key(oxcell *assoc, oxcell *key) {
+    oxcell *entry;
+    for (entry = assoc; entry != oxnil; entry = oxcell_get_rest(entry)) {
+        oxcell *kv = oxcell_get_first(entry);
+        if (oxcell_eq_text(key, kv)) {
+            return entry;
+        }
+    }
+
+    return oxnil;
+}
+
+// symbol stores information in an associative list
+//
 oxcell *oxsym_lookup(oxcell *name, oxcell *env) {
-    for (; env != nill; env = oxcell_get_cdr(env)) {
-        oxcell *entry = oxcell_get_car(env);
+    for (; env != oxnil; env = oxcell_get_first(env)) {
+        oxcell *entry = oxcell_get_rest(env);
         if (issymbol(entry)) {
             if (oxcell_eq_text(name, oxcell_get_name(entry))) {
                 return entry;
@@ -220,7 +235,7 @@ oxcell *oxsym_lookup(oxcell *name, oxcell *env) {
         }
     }
     
-    return nill;
+    return oxnil;
 }
 
 
@@ -228,7 +243,7 @@ int oxcell_eq_text(oxcell *c1, oxcell *c2) {
     if (c1 && c2) {
         if (isatom(c1) && isatom(c2)) {
             if (istext(c1) && istext(c2)) {
-                if (c1 != nill && c2 != nill) {
+                if (c1 != oxnil && c2 != oxnil) {
                     const char *p1 = oxcell_get_text(c1);
                     const char *p2 = oxcell_get_text(c2);
                     if (p1 && p2) {
@@ -245,3 +260,4 @@ int oxcell_eq_text(oxcell *c1, oxcell *c2) {
     return 0;
 }
 
+#endif

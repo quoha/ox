@@ -4,7 +4,7 @@
 //  Created by Michael Henderson on 10/2/14.
 //  Copyright (c) 2014 Michael D Henderson. All rights reserved.
 //
-
+#if 0
 #include "oxbuf.h"
 
 #include <stdio.h>
@@ -346,3 +346,4 @@ oxbuf *oxbuf_trim_trailing_map(oxbuf *s, oxwhtlst *w) {
     
     return oxbuf_delete_ff(s);
 }
+#endif

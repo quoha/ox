@@ -5,6 +5,7 @@
 //  Copyright (c) 2014 Michael D Henderson. All rights reserved.
 //
 
+#if 0
 #include "oxval.h"
 
 #include <stdio.h>
@@ -14,7 +15,6 @@
 
 static oxval *oxval_alloc_boolean(int value);
 static oxval *oxval_alloc_integer(int value, int isNull);
-static oxval *oxval_alloc_queue(oxdeq *queue);
 static oxval *oxval_alloc_real(double value, int isNull);
 static oxval *oxval_alloc_symbol(const char *name, oxval *value);
 static oxval *oxval_alloc_text(const char *value);
@@ -40,7 +40,6 @@ oxval *oxval_alloc(char type, char isNull, ...) {
     int         boolean = 0;
     int         integer = 0;
     const char *name    = NULL;
-    oxdeq      *queue   = NULL;
     double      real    = 0.0;
     const char *text    = NULL;
     oxval      *value   = NULL;
@@ -61,9 +60,6 @@ oxval *oxval_alloc(char type, char isNull, ...) {
         case 'i':
             integer = va_arg(ap, int);
             break;
-        case 'q':
-            queue = va_arg(ap, oxdeq *);
-            break;
         case 's':
             name  = va_arg(ap, const char *);
             value = va_arg(ap, oxval *);
@@ -75,7 +71,6 @@ oxval *oxval_alloc(char type, char isNull, ...) {
             boolean = 0;
             integer = 0;
             name    = NULL;
-            queue   = NULL;
             real    = 0.0;
             text    = NULL;
             value   = NULL;
@@ -93,8 +88,6 @@ oxval *oxval_alloc(char type, char isNull, ...) {
             return oxval_alloc_real(real, isNull);
         case 'i':
             return oxval_alloc_integer(integer, isNull);
-        case 'q':
-            return oxval_alloc_queue(queue);
         case 's':
             return oxval_alloc_symbol(name, value);
         case 't':
@@ -125,29 +118,9 @@ static oxval *oxval_alloc_integer(int value, int isNull) {
         perror(__FUNCTION__);
         exit(2);
     }
-    v->kind                   = oxtNumber;
-    v->u.number.kind          = oxtInteger;
-    v->u.number.isNull        = isNull ? -1 : 0;
-    v->u.number.value.integer = value;
-    return v;
-}
-
-static oxval *oxval_alloc_queue(oxdeq *queue) {
-    oxval *v = malloc(sizeof(*v));
-    if (!v) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
-    v->kind      = oxtQueue;
-    if (queue) {
-        v->u.queue   = oxdeq_copy(queue, 0);
-    } else {
-        v->u.queue   = oxdeq_alloc();
-    }
-    if (!v->u.queue) {
-        perror(__FUNCTION__);
-        exit(2);
-    }
+    v->kind                   = oxtInteger;
+    v->isNull                 = isNull ? -1 : 0;
+    v->u.number.integer       = value;
     return v;
 }
 
@@ -157,10 +130,9 @@ static oxval *oxval_alloc_real(double value, int isNull) {
         perror(__FUNCTION__);
         exit(2);
     }
-    v->kind                = oxtNumber;
-    v->u.number.kind       = oxtReal;
-    v->u.number.isNull     = isNull ? -1 : 0;
-    v->u.number.value.real = value;
+    v->kind                = oxtReal;
+    v->isNull              = isNull ? -1 : 0;
+    v->u.number.real       = value;
     return v;
 }
 
@@ -192,3 +164,4 @@ static oxval *oxval_alloc_text(const char *value) {
     strcpy(v->u.text.value, value ? value : "");
     return v;
 }
+#endif

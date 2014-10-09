@@ -16,8 +16,8 @@
 		29C1516319E29DC200D25CA6 /* oxeval.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1516119E29DC200D25CA6 /* oxeval.c */; };
 		29C1516619E29FE300D25CA6 /* oxprint.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1516419E29FE300D25CA6 /* oxprint.c */; };
 		29C1516919E2A05900D25CA6 /* oxinit.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1516719E2A05900D25CA6 /* oxinit.c */; };
+		29C1516C19E4E74A00D25CA6 /* oxcell.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1516A19E4E74A00D25CA6 /* oxcell.c */; };
 		29E873AE19DDAE240098447B /* oxval.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873AC19DDAE240098447B /* oxval.c */; };
-		29E873B119DDB5760098447B /* oxdeq.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873AF19DDB5760098447B /* oxdeq.c */; };
 		29E873B419DDDE380098447B /* oxchunk.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873B219DDDE380098447B /* oxchunk.c */; };
 		29E873B719DF42AC0098447B /* oxtype.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873B519DF42AC0098447B /* oxtype.c */; };
 /* End PBXBuildFile section */
@@ -54,10 +54,10 @@
 		29C1516519E29FE300D25CA6 /* oxprint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxprint.h; sourceTree = "<group>"; };
 		29C1516719E2A05900D25CA6 /* oxinit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxinit.c; sourceTree = "<group>"; };
 		29C1516819E2A05900D25CA6 /* oxinit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxinit.h; sourceTree = "<group>"; };
+		29C1516A19E4E74A00D25CA6 /* oxcell.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxcell.c; sourceTree = "<group>"; };
+		29C1516B19E4E74A00D25CA6 /* oxcell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxcell.h; sourceTree = "<group>"; };
 		29E873AC19DDAE240098447B /* oxval.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxval.c; sourceTree = "<group>"; };
 		29E873AD19DDAE240098447B /* oxval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxval.h; sourceTree = "<group>"; };
-		29E873AF19DDB5760098447B /* oxdeq.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxdeq.c; sourceTree = "<group>"; };
-		29E873B019DDB5760098447B /* oxdeq.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxdeq.h; sourceTree = "<group>"; };
 		29E873B219DDDE380098447B /* oxchunk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxchunk.c; sourceTree = "<group>"; };
 		29E873B319DDDE380098447B /* oxchunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxchunk.h; sourceTree = "<group>"; };
 		29E873B519DF42AC0098447B /* oxtype.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxtype.c; sourceTree = "<group>"; };
@@ -100,10 +100,10 @@
 				29C1515919E2996300D25CA6 /* oxalloc.h */,
 				29A4A7D919DDABB800188555 /* oxbuf.c */,
 				29A4A7DA19DDABB800188555 /* oxbuf.h */,
+				29C1516A19E4E74A00D25CA6 /* oxcell.c */,
+				29C1516B19E4E74A00D25CA6 /* oxcell.h */,
 				29E873B219DDDE380098447B /* oxchunk.c */,
 				29E873B319DDDE380098447B /* oxchunk.h */,
-				29E873AF19DDB5760098447B /* oxdeq.c */,
-				29E873B019DDB5760098447B /* oxdeq.h */,
 				29C1516119E29DC200D25CA6 /* oxeval.c */,
 				29C1516219E29DC200D25CA6 /* oxeval.h */,
 				29C1516719E2A05900D25CA6 /* oxinit.c */,
@@ -180,7 +180,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				29E873B119DDB5760098447B /* oxdeq.c in Sources */,
+				29C1516C19E4E74A00D25CA6 /* oxcell.c in Sources */,
 				29A4A7DB19DDABB800188555 /* oxbuf.c in Sources */,
 				29C1516019E29CD100D25CA6 /* oxprim.c in Sources */,
 				29C1516919E2A05900D25CA6 /* oxinit.c in Sources */,

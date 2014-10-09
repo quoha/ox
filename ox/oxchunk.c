@@ -4,7 +4,7 @@
 //  Created by Michael Henderson on 10/2/14.
 //  Copyright (c) 2014 Michael D Henderson. All rights reserved.
 //
-
+#if 0
 #include "oxchunk.h"
 
 #include <stdio.h>
@@ -149,3 +149,4 @@ oxchunk *oxchunk_pull_text(oxbuf *b) {
 
     return c;
 }
+#endif

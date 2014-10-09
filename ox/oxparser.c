@@ -4,7 +4,7 @@
 //  Created by Michael Henderson on 10/3/14.
 //  Copyright (c) 2014 Michael D Henderson. All rights reserved.
 //
-
+#if 0
 #include "oxtype.h"
 #include "oxalloc.h"
 #include "oxbuf.h"
@@ -355,21 +355,21 @@ oxcell *oxexpr_read_tail(oxbuf *ib) {
     oxtoken *t = oxtok_read(ib);
     switch (t->kind) {
         case oxTokCloseParen:
-            return nill;
+            return oxnil;
         case oxTokEOF:
             printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
             printf("error:\tunexpected end of input\n");
             exit(1);
         case oxTokInteger:
-            return oxcell_alloc_cons(oxcell_alloc_integer(t->value.integer), oxexpr_read_tail(ib));
+            return oxcell_alloc_list(oxcell_alloc_integer(t->value.integer), oxexpr_read_tail(ib));
         case oxTokReal:
-            return oxcell_alloc_cons(oxcell_alloc_real(t->value.real), oxexpr_read_tail(ib));
+            return oxcell_alloc_list(oxcell_alloc_real(t->value.real), oxexpr_read_tail(ib));
         case oxTokOpenParen:
-            return oxcell_alloc_cons(oxexpr_read_tail(ib), oxexpr_read_tail(ib));
+            return oxcell_alloc_list(oxexpr_read_tail(ib), oxexpr_read_tail(ib));
         case oxTokName:
-            return oxcell_alloc_cons(oxcell_alloc_symbol(oxcell_alloc_text(t->value.name, strlen(t->value.name)), 0), oxexpr_read_tail(ib));
+            return oxcell_alloc_list(oxcell_alloc_symbol(oxcell_alloc_text(t->value.name, strlen(t->value.name)), 0), oxexpr_read_tail(ib));
         case oxTokText:
-            return oxcell_alloc_cons(oxcell_alloc_cstring(t->value.text), oxexpr_read_tail(ib));
+            return oxcell_alloc_list(oxcell_alloc_cstring(t->value.text), oxexpr_read_tail(ib));
     }
     
     if (1) {
@@ -403,3 +403,4 @@ const char *oxtok_toktype(oxtoken *t) {
     return "**null**";
 }
 
+#endif

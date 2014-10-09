@@ -10,11 +10,14 @@
 
 #include "oxtype.h"
 
-oxcell *oxf_cdr(oxcell *args, oxcell *env);
-oxcell *oxf_car(oxcell *args, oxcell *env);
-oxcell *oxf_cons(oxcell *args, oxcell *env);
+oxcell *oxf_first(oxcell *args, oxcell *env);
 oxcell *oxf_lambda(oxcell *args, oxcell *env);
+oxcell *oxf_list(oxcell *args, oxcell *env);
 oxcell *oxf_noop(oxcell *args, oxcell *env);
 oxcell *oxf_quote(oxcell *args, oxcell *env);
+oxcell *oxf_rest(oxcell *args, oxcell *env);
+
+oxcell *oxf_glyph_add(oxcell *args, oxcell *env);
+oxcell *oxf_glyph_subtract(oxcell *args, oxcell *env);
 
 #endif /* defined(__ox__oxprim__) */

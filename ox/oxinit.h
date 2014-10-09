@@ -10,8 +10,8 @@
 
 #include "oxtype.h"
 
-extern oxcell *nill;
-extern oxcell *myEnv;
+extern oxcell *oxnil;
+extern oxcell *oxenv;
 
 int oxinit(void);
 

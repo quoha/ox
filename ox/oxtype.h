@@ -9,8 +9,17 @@
 #define __ox__oxtype__
 
 // atom   - type atom
+//          isatom(x)   -> true
+//          islist(x)   -> false
+//          issymbol(x) -> false
 // list   - type list
-// symbol - type list, flagged as symbol
+//          isatom(x)   -> false
+//          islist(x)   -> true
+//          issymbol(x) -> false
+// symbol - type symbol
+//          isatom(x)   -> false
+//          islist(x)   -> true
+//          issymbol(x) -> true
 //        - attributes stored in associative list
 //             (('name' 'pi') ('value' 3.14159))
 //
@@ -24,8 +33,8 @@
 //   ox does not support the traditional 'cons' operator
 //
 //   in lists, 'car' points to a data cell
-//             'cdr' points to  'nill' to end the list
-//                or points to the next cell in the list
+//             'cdr' points to either the next data cell in the list
+//                                 or to 'nill' to end the list
 //       (car -> any valid data cell (including nill)
 //        cdr -> next cell in list or nill to terminate
 //       )
@@ -107,25 +116,31 @@
 
 enum atomType {eAtomFunc, eAtomInteger, eAtomReal, eAtomText, eAtomTime};
 
-typedef struct oxatom {
-    enum atomType    kind;      // kind for atoms
+typedef struct oxvalue {
+    enum { oxvFunction, oxvInteger, oxvName, oxvReal, oxvText, oxvTimestamp, oxvUndefined } kind;
     struct oxcell *(*func)(struct oxcell *, struct oxcell *);
     long             integer;   // value for integer
+    char            *name;      // value for name // so unsure of this
     double           real;      // value for real
     char            *text;      // text for strings
     unsigned long    timestamp; // time values
-} oxatom;
 
+    struct oxcell   *plist;
+} oxvalue;
+
+typedef struct oxvalue oxatom;
+
+// if rest is NULL then this is an atom
+// otherwise it is a list
+//
 typedef struct oxcell {
-    enum { octAtom, octCons } kind;
-    
-    oxatom   *atom;
-    int       isSymbol;
-    
-    struct {
-        struct oxcell *car;
-        struct oxcell *cdr;
-    } cons;
+    enum { octAtom, octList } kind;
+
+    int             isSymbol;
+    struct oxvalue *atom;
+    struct oxcell  *name;
+    struct oxcell  *first;
+    struct oxcell  *rest;
 } oxcell;
 
 typedef struct oxtoken {

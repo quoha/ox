@@ -14,10 +14,12 @@
 #include <stdlib.h>
 
 oxcell *oxcell_alloc(void);
-oxcell *oxcell_alloc_cons(oxcell *car, oxcell *cdr);
 oxcell *oxcell_alloc_cstring(const char *cstring);
+oxcell *oxcell_alloc_env(void);
 oxcell *oxcell_alloc_func(oxcell *(*func)(oxcell *arg, oxcell *env));
+oxcell *oxcell_alloc_list(oxcell *first, oxcell *rest);
 oxcell *oxcell_alloc_integer(long integer);
+oxcell *oxcell_alloc_nil(void);
 oxcell *oxcell_alloc_real(double real);
 oxcell *oxcell_alloc_text(const char *text, size_t len);
 oxcell *oxcell_alloc_symbol(oxcell *name, oxcell *value);

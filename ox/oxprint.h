@@ -10,6 +10,7 @@
 
 #include "oxtype.h"
 
-void oxcell_print(oxcell *c);
+void oxcell_dump(oxcell *c, int level);
+void oxcell_print(oxcell *c, int level);
 
 #endif /* defined(__ox__oxprint__) */

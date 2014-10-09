@@ -8,36 +8,42 @@
 #ifndef __ox__oxval__
 #define __ox__oxval__
 
+#include "local.h"
+
 #include <stdlib.h>
 
-#include "oxdeq.h"
-
-typedef struct oxval {
+// simple structure to hold common data types
+//
+typedef struct oxcell {
+    enum { oxcBool, oxcFunc, oxcInteger, oxcList, oxcName, oxcReal, oxcSymbol, oxcText, oxcTimestamp } kind;
     union {
-        int           boolean;
-        struct oxdeq *queue;
         struct {
+            struct oxcell *first;
+            struct oxcell *rest;
+        } list;
+        union {
+            int boolean;
+            struct oxcell *(*func)(struct oxcell *args, struct oxcell *env);
+            char *name;
             union {
-                int    integer;
+                long   integer;
                 double real;
-            } value;
-            int    isNull;
-            enum { oxtInteger , oxtReal } kind;
-        } number;
-        struct {
-            char   *value;
-            ssize_t length;
-            int     isNull;
-        } text;
-        struct {
-            char         *name;
-            struct oxval *value;
-        } symbol;
+            } number;
+            struct {
+                char          *name;
+                struct oxcell *value;
+            } symbol;
+            struct {
+                char   *value;
+                int     isNull;
+                size_t  length;
+            } text;
+            unsigned long timestamp;
+        } atom;
     } u;
-    enum { oxtBool, oxtNumber, oxtQueue, oxtSymbol, oxtText } kind;
-    unsigned char data[1];
-} oxval;
+} oxcell;
 
 oxval *oxval_alloc(char type, char isNull, ...);
+
 
 #endif /* defined(__ox__oxval__) */
