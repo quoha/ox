@@ -32,7 +32,7 @@ struct oxtext {
     unsigned long  hashValue;
     size_t         length;
     int            lineNumber;
-    unsigned char data[1];
+    unsigned char  data[1];
 };
 
 // token for parsing. wastes a lot of memory at the moment.
@@ -346,7 +346,7 @@ oxcell *oxf_prexpr(oxcell *arg, oxcell *env) {
                     printf("**eof** ");
                     break;
                 case oxTokInteger:
-                    printf("int = %s ", OXCTEXT(text)->data);
+                    printf("int  = %s ", OXCTEXT(text)->data);
                     break;
                 case oxTokName:
                     printf("name = %s ", OXCTEXT(text)->data);
@@ -355,13 +355,13 @@ oxcell *oxf_prexpr(oxcell *arg, oxcell *env) {
                     printf("( ");
                     break;
                 case oxTokReal:
-                    printf("real %s ", OXCTEXT(text)->data);
+                    printf("real = %s ", OXCTEXT(text)->data);
                     break;
                 case oxTokSingleQuote:
                     printf("' ");
                     break;
                 case oxTokText:
-                    printf("text \"%s\" ", OXCTEXT(text)->data);
+                    printf("text = \"%s\" ", OXCTEXT(text)->data);
                     break;
             }
             break;
@@ -911,6 +911,10 @@ int main(int argc, const char * argv[]) {
                 OXCTEXT(text)->lineNumber = 1;
 
                 printf("\n----------------------------------\n");
+            }
+            
+            if (doEval) {
+                
             }
 #if 0
 
