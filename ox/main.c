@@ -21,7 +21,7 @@ typedef        oxcell *(*oxfunc)(oxcell *args, oxcell *env);
 // the official list of common data types
 //
 typedef enum { oxcBoolean, oxcChMap, oxcFunc, oxcInteger, oxcList, oxcName, oxcReal, oxcSymbol, oxcText, oxcTimestamp, oxcToken } oxcellKind;
-typedef enum { oxTokEOF, oxTokOpenParen, oxTokCloseParen, oxTokSingleQuote, oxTokInteger, oxTokName, oxTokReal, oxTokText} oxtokenKind;
+typedef enum { oxTokEOF, oxTokOpenParen, oxTokCloseParen, oxTokInteger, oxTokName, oxTokReal, oxTokText} oxtokenKind;
 
 
 // why must everyone write their own string?
@@ -227,107 +227,13 @@ oxcell *oxcell_get_true(void) {
     return oxtrue;
 }
 
-//   usage: (expr-read "text")
-// returns: (#expression# errmsg)
-//
-oxcell *oxf_expr_read(oxcell *args, oxcell *env) {
-    // we will return our result. the data is in the car of the list
-    // and any error message is in the cdr.
-    //
-    oxcell *result = oxcell_factory(oxcList, oxnil, oxnil);
-    
-    // confirm that our argument is text
-    //
-    if (!OXISTEXT(args)) {
-        OXCFIRST(result) = oxnil;
-        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*input-is-not-text*"), oxnil);
-        return result;
-    }
-
-    oxcell *tokenResult = oxf_token_read(args, env);
-    if (!OXISNIL(OXCREST(tokenResult))) {
-        OXCFIRST(result) = oxnil;
-        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-read-failed*"), OXCREST(tokenResult));
-        return result;
-    }
-
-    oxcell *token = OXCFIRST(tokenResult);
-
-    switch (OXCTOKEN(token)->kind) {
-        case oxTokCloseParen:
-            printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-            printf("error:\tunexpected ')' in input\n");
-            exit(1);
-        case oxTokEOF:
-            OXCFIRST(result) = oxnil;
-            OXCREST(result) = oxcell_factory(oxcList, oxcell_factory_cstring("*end-of-input*"), oxnil);
-            break;
-        case oxTokInteger:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcInteger, OXCINTEGER(OXCTOKEN(token)->value)), oxnil);
-            OXCREST(result)  = oxnil;
-            break;
-        case oxTokOpenParen:
-            //return oxexpr_read_tail(arg, oxnil);
-            OXCFIRST(result) = oxnil;
-            OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-open-paren-not-implemented*"), oxnil);
-            break;
-        case oxTokReal:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcReal, OXCREAL(OXCTOKEN(token)->value)), oxnil);
-            OXCREST(result)  = oxnil;
-            break;
-        case oxTokName:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcName, OXCNAME(OXCTOKEN(token)->value)), oxnil);
-            OXCREST(result)  = oxnil;
-            break;
-        case oxTokSingleQuote:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-single-quote-not-implemented*"), oxnil);
-            OXCREST(result)  = oxnil;
-            break;
-        case oxTokText:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcText, OXCTEXT(OXCTOKEN(token)->value)), oxnil);
-            OXCREST(result)  = oxnil;
-            break;
-    }
-
-    return result;
-}
-
-//   usage: (fread "filename")
-// returns: ("data" errmsg)
-//
-oxcell *oxf_fread(oxcell *args, oxcell *env) {
-    // we will return our result. the data is in the car of the list
-    // and any error message is in the cdr.
-    //
-    oxcell *result = oxcell_factory(oxcList, oxnil, oxnil);
-
-    // confirm that our argument is text
-    //
-    if (!OXISTEXT(args)) {
-        OXCFIRST(result) = oxnil;
-        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*arg-must-be-text*"), oxnil);
-        return result;
-    }
-
-    oxtext *text = oxtext_from_file((const char *)(OXCTEXT(args)->data));
-    if (!text) {
-        OXCFIRST(result) = oxnil;
-        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*invalid-file-name*"), oxnil);
-        return result;
-    }
-
-    OXCFIRST(result) = oxcell_factory(oxcText, text);
-
-    return result;
-}
-
 //   usage: (expr-print #expression#)
 // returns: nil
 //
 oxcell *oxf_expr_print(oxcell *args, oxcell *env) {
     oxcell *text;
     oxcell *value;
-
+    
     if (OXISNIL(args)) {
         printf("() ");
         return oxnil;
@@ -390,9 +296,6 @@ oxcell *oxf_expr_print(oxcell *args, oxcell *env) {
                 case oxTokReal:
                     printf("real = %s ", OXCTEXT(text)->data);
                     break;
-                case oxTokSingleQuote:
-                    printf("' ");
-                    break;
                 case oxTokText:
                     printf("text = \"%s\" ", OXCTEXT(text)->data);
                     break;
@@ -400,6 +303,124 @@ oxcell *oxf_expr_print(oxcell *args, oxcell *env) {
             break;
     }
     return oxnil;
+}
+
+//   usage: (expr-read "text")
+// returns: (#expression# errmsg)
+//
+oxcell *oxf_expr_read(oxcell *args, oxcell *env) {
+    // we will return our result. the data is in the car of the list
+    // and any error message is in the cdr.
+    //
+    oxcell *result = oxcell_factory(oxcList, oxnil, oxnil);
+    
+    // confirm that our argument is text
+    //
+    if (!OXISTEXT(args)) {
+        OXCFIRST(result) = oxnil;
+        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*input-is-not-text*"), oxnil);
+        return result;
+    }
+
+    oxcell *tokenResult = oxf_token_read(args, env);
+    if (!OXISNIL(OXCREST(tokenResult))) {
+        OXCFIRST(result) = oxnil;
+        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-read-failed*"), OXCREST(tokenResult));
+        return result;
+    }
+
+    oxcell *token = OXCFIRST(tokenResult);
+
+    switch (OXCTOKEN(token)->kind) {
+        case oxTokCloseParen:
+            printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+            printf("error:\tunexpected ')' in input\n");
+            exit(1);
+        case oxTokEOF:
+            OXCFIRST(result) = oxnil;
+            OXCREST(result) = oxcell_factory(oxcList, oxcell_factory_cstring("*end-of-input*"), oxnil);
+            break;
+        case oxTokInteger:
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcInteger, OXCINTEGER(OXCTOKEN(token)->value)), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
+        case oxTokOpenParen:
+            //return oxexpr_read_tail(arg, oxnil);
+            OXCFIRST(result) = oxnil;
+            OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-open-paren-not-implemented*"), oxnil);
+            //return oxexpr_read_tail(arg, oxnil);
+            break;
+        case oxTokReal:
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcReal, OXCREAL(OXCTOKEN(token)->value)), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
+        case oxTokName:
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcName, OXCNAME(OXCTOKEN(token)->value)), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
+        case oxTokText:
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcText, OXCTEXT(OXCTOKEN(token)->value)), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
+    }
+
+    return result;
+}
+
+//   usage: ** internal function **
+// returns: (#expression# errmsg)
+//
+oxcell *oxf_expr_read_tail(oxcell *args, oxcell *env) {
+    // we will return our result. the data is in the car of the list
+    // and any error message is in the cdr.
+    //
+    oxcell *result = oxcell_factory(oxcList, oxnil, oxnil);
+    
+    // confirm that our argument is text
+    //
+    if (!OXISTEXT(args)) {
+        OXCFIRST(result) = oxnil;
+        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*input-is-not-text*"), oxnil);
+        return result;
+    }
+    
+    oxcell *tokenResult = oxf_token_read(args, env);
+    if (!OXISNIL(OXCREST(tokenResult))) {
+        OXCFIRST(result) = oxnil;
+        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-read-failed*"), OXCREST(tokenResult));
+        return result;
+    }
+
+    return result;
+}
+
+//   usage: (fread "filename")
+// returns: ("data" errmsg)
+//
+oxcell *oxf_fread(oxcell *args, oxcell *env) {
+    // we will return our result. the data is in the car of the list
+    // and any error message is in the cdr.
+    //
+    oxcell *result = oxcell_factory(oxcList, oxnil, oxnil);
+
+    // confirm that our argument is text
+    //
+    if (!OXISTEXT(args)) {
+        OXCFIRST(result) = oxnil;
+        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*arg-must-be-text*"), oxnil);
+        return result;
+    }
+
+    oxtext *text = oxtext_from_file((const char *)(OXCTEXT(args)->data));
+    if (!text) {
+        OXCFIRST(result) = oxnil;
+        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*invalid-file-name*"), oxnil);
+        return result;
+    }
+
+    OXCFIRST(result) = oxcell_factory(oxcText, text);
+
+    return result;
 }
 
 //   usage: (token-read "text")
@@ -460,6 +481,8 @@ oxcell *oxf_token_read(oxcell *args, oxcell *env) {
         token->kind          = oxTokOpenParen;
         token->text          = oxcell_factory_cstring("(");
         token->value         = oxcell_factory_cstring("(");
+        OXCTEXT(token->text)->lineNumber = token->lineNumber;
+        OXCTEXT(token->value)->lineNumber = token->lineNumber;
         return result;
     }
     
@@ -467,13 +490,18 @@ oxcell *oxf_token_read(oxcell *args, oxcell *env) {
         token->kind          = oxTokCloseParen;
         token->text          = oxcell_factory_cstring(")");
         token->value         = oxcell_factory_cstring(")");
+        OXCTEXT(token->text)->lineNumber = token->lineNumber;
+        OXCTEXT(token->value)->lineNumber = token->lineNumber;
         return result;
     }
     
     if (*startLexeme == '\'') {
-        token->kind          = oxTokSingleQuote;
+        token->kind          = oxTokName;
         token->text          = oxcell_factory_cstring("'");
         token->value         = oxcell_factory_cstring("'");
+        OXCTEXT(token->text)->lineNumber = token->lineNumber;
+        OXCTEXT(token->value)->lineNumber = token->lineNumber;
+        
         return result;
     }
     
@@ -699,7 +727,7 @@ oxcell *oxf_token_read(oxcell *args, oxcell *env) {
     // the value is the same
     //
     token->value = oxcell_factory(oxcText, oxtext_from_memory(startLexeme, text->curr - startLexeme));
-    OXCTEXT(token->text)->lineNumber = token->lineNumber;
+    OXCTEXT(token->value)->lineNumber = token->lineNumber;
     
     return result;
 }
@@ -971,7 +999,7 @@ int main(int argc, const char * argv[]) {
 #endif
                 if (!OXISNIL(err)) {
                     // should be end-of-input
-                    printf("...ox: error reading token from file\n");
+                    printf("...ox: error parsing expression\n");
                     printf(".....: %-18s == '%s'\n", "fileName", argv[idx]);
                     printf(".....: %-18s == '%s'\n", "errorMsg", OXCTEXT(OXCFIRST(err))->data);
                     return 2;
@@ -1003,6 +1031,7 @@ int main(int argc, const char * argv[]) {
             }
             
             if (!strcmp(opt, "--help")) {
+                printf("usage: ox [options] [-- script [script ...]]\n");
                 return 0;
             } else if (!strcmp(opt, "--check-file") && !val) {
                 doCheck = -1;
