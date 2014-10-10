@@ -1042,5 +1042,7 @@ int main(int argc, const char * argv[]) {
         }
     }
 
+    printf("...ox: thanks for stopping by\n");
+    
     return 0;
 }
