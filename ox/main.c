@@ -80,6 +80,7 @@ struct oxcell {
 #define OXISLIST(c)    ((c)->kind == oxcList)
 #define OXISATOM(c)    (!(OXISLIST(c)))
 #define OXISNIL(c)     ((c) == oxnil)
+#define OXISTOKEN(c)   ((c)->kind == oxcToken)
 
 #define OXCFIRST(c)    ((c)->u.list.first)
 #define OXCREST(c)     ((c)->u.list.rest)
@@ -91,6 +92,7 @@ struct oxcell {
 #define OXCNAME(c)     ((c)->u.atom.name)
 #define OXCREAL(c)     ((c)->u.atom.real)
 #define OXCTEXT(c)     ((c)->u.atom.text)
+#define OXCTOKEN(c)    ((c)->u.atom.token)
 #define OXCSYMBOL(c)   ((c)->u.atom.symbol)
 
 oxcell *oxenv;
@@ -290,6 +292,9 @@ oxcell *oxf_fread(oxcell *arg, oxcell *env) {
 }
 
 oxcell *oxf_prexpr(oxcell *arg, oxcell *env) {
+    oxcell *text;
+    oxcell *value;
+
     if (arg == oxnil) {
         printf("() ");
         return oxnil;
@@ -316,7 +321,7 @@ oxcell *oxf_prexpr(oxcell *arg, oxcell *env) {
             printf(") ");
             break;
         case oxcName:
-            printf("#name#" );
+            printf("%s ", OXCNAME(arg)->data);
             break;
         case oxcReal:
             printf("%g ", OXCREAL(arg));
@@ -331,7 +336,34 @@ oxcell *oxf_prexpr(oxcell *arg, oxcell *env) {
             printf("#dttm# ");
             break;
         case oxcToken:
-            printf("#token# ");
+            text = OXCTOKEN(arg)->text;
+            value = OXCTOKEN(arg)->value;
+            switch (OXCTOKEN(arg)->kind) {
+                case oxTokCloseParen:
+                    printf(") ");
+                    break;
+                case oxTokEOF:
+                    printf("**eof** ");
+                    break;
+                case oxTokInteger:
+                    printf("int = %s ", OXCTEXT(text)->data);
+                    break;
+                case oxTokName:
+                    printf("name = %s ", OXCTEXT(text)->data);
+                    break;
+                case oxTokOpenParen:
+                    printf("( ");
+                    break;
+                case oxTokReal:
+                    printf("real %s ", OXCTEXT(text)->data);
+                    break;
+                case oxTokSingleQuote:
+                    printf("' ");
+                    break;
+                case oxTokText:
+                    printf("text \"%s\" ", OXCTEXT(text)->data);
+                    break;
+            }
             break;
     }
     return oxnil;
@@ -339,11 +371,7 @@ oxcell *oxf_prexpr(oxcell *arg, oxcell *env) {
 
 //   usage: (token-read text)
 // returns: (data errmsg)
-//
-// dangerous? accept cells but only read text.
-//
-// returns the traditional (data err) list. if err is non-nil then we
-// had a problem (most likely end-of-input).
+// side-ef: updates internal state of the "stream" of text
 //
 oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
     // we will return our result. the data is in the car of the list
@@ -397,18 +425,21 @@ oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
     if (*startLexeme == '(') {
         token->kind          = oxTokOpenParen;
         token->text          = oxcell_factory_cstring("(");
+        token->value         = oxcell_factory_cstring("(");
         return result;
     }
     
     if (*startLexeme == ')') {
         token->kind          = oxTokCloseParen;
         token->text          = oxcell_factory_cstring(")");
+        token->value         = oxcell_factory_cstring(")");
         return result;
     }
     
     if (*startLexeme == '\'') {
         token->kind          = oxTokSingleQuote;
         token->text          = oxcell_factory_cstring("'");
+        token->value         = oxcell_factory_cstring("'");
         return result;
     }
     
@@ -453,7 +484,7 @@ oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
         
         // only accept strings which end at end-of-buffer or a space
         //
-        if (text->curr < text->endOfData || !isspace(text->curr[1])) {
+        if (!(text->curr < text->endOfData || isspace(text->curr[0]))) {
             result->u.list.first = oxnil;
             result->u.list.rest  = oxcell_factory(oxcList, oxcell_factory_cstring("quoted text not followed by space"), oxnil);
             return result;
@@ -461,12 +492,12 @@ oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
         
         // make an exact copy of the input without including the quote marks
         //
-        token->text = oxcell_factory(oxcText, startLexeme + 1, text->curr - startLexeme - 2);
+        token->text = oxcell_factory(oxcText, oxtext_from_memory(startLexeme + 1, text->curr - startLexeme - 2));
         token->text->u.atom.text->lineNumber = token->lineNumber;
         
         // make a copy without quotes and resolve all escaped characters in the input
         //
-        token->value = oxcell_factory(oxcText, startLexeme + 1, text->curr - startLexeme - 2);
+        token->value = oxcell_factory(oxcText, oxtext_from_memory(startLexeme + 1, text->curr - startLexeme - 2));
         token->value->u.atom.text->lineNumber = token->lineNumber;
         oxtext_unescape(token->value->u.atom.text);
         
@@ -477,8 +508,7 @@ oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
     // optional balanced open and close alphanumeric text:
     //      \" "/
     //     \\" "//
-    //      \' '/
-    //    \ac' 'ca/
+    //    \ac" "ca/
     //
     if (*startLexeme == escape) {
         // look for \(.*)" here
@@ -556,9 +586,9 @@ oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
             // make an exact copy of the input without including the open
             // and close strings.
             //
-            token->text = oxcell_factory(oxcText, startRawText, endRawText - startRawText);
+            token->text = oxcell_factory(oxcText, oxtext_from_memory(startRawText, endRawText - startRawText));
             token->text->u.atom.text->lineNumber = token->lineNumber;
-            token->value = oxcell_factory(oxcText, startRawText, endRawText - startRawText);
+            token->value = oxcell_factory(oxcText, oxtext_from_memory(startRawText, endRawText - startRawText));
             token->value->u.atom.text->lineNumber = token->lineNumber;
             
             return result;
@@ -572,7 +602,7 @@ oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
     //
     //    1    is an integer, so is +1   or -1
     //    1.2  is a  number , so is +1.2 or -1.2
-    //    1.   is a  symbol , so is   .2 or  1.2k
+    //    1.   is a  name   , so is   .2 or  1.2k
     //
     if (isdigit(*startLexeme) || ((*startLexeme == '-' || *startLexeme == '+') && isdigit(text->curr[0]))) {
         while (text->curr < text->endOfData && isdigit(text->curr[0])) {
@@ -584,7 +614,7 @@ oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
             
             // make an exact copy of the input
             //
-            token->text = oxcell_factory(oxcText, startLexeme, text->curr - startLexeme);
+            token->text = oxcell_factory(oxcText, oxtext_from_memory(startLexeme, text->curr - startLexeme));
             token->text->u.atom.text->lineNumber = token->lineNumber;
             
             // the value is the converted text
@@ -605,7 +635,7 @@ oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
                 
                 // make an exact copy of the input
                 //
-                token->text = oxcell_factory(oxcText, startLexeme, text->curr - startLexeme);
+                token->text = oxcell_factory(oxcText, oxtext_from_memory(startLexeme, text->curr - startLexeme));
                 token->text->u.atom.text->lineNumber = token->lineNumber;
                 
                 // the value is the converted text
@@ -629,12 +659,12 @@ oxcell *oxf_token_read(oxcell *arg, oxcell *env) {
     
     // make an exact copy of the input
     //
-    token->text = oxcell_factory(oxcText, startLexeme, text->curr - startLexeme);
+    token->text = oxcell_factory(oxcText, oxtext_from_memory(startLexeme, text->curr - startLexeme));
     token->text->u.atom.text->lineNumber = token->lineNumber;
     
     // the value is the same
     //
-    token->value = oxcell_factory(oxcText, startLexeme, text->curr - startLexeme);
+    token->value = oxcell_factory(oxcText, oxtext_from_memory(startLexeme, text->curr - startLexeme));
     token->text->u.atom.text->lineNumber = token->lineNumber;
     
     return result;
@@ -821,10 +851,12 @@ unsigned char *strrcpy(unsigned char *src, size_t length) {
 
 
 int main(int argc, const char * argv[]) {
-    int debugLevel = 0;
-    int doCheck    = 0;
-    int doEval     = 1;
-    int doOpt      = 1;
+    int debugLevel   = 0;
+    int doCheck      = 1;
+    int doDumpInput  = 0;
+    int doDumpTokens = 0;
+    int doEval       = 0;
+    int doOptions    = 1;
     int idx;
 
     oxcell *oxenv = oxinit();
@@ -832,24 +864,54 @@ int main(int argc, const char * argv[]) {
 
     for (idx = 1; idx < argc; idx++) {
         printf("..opt: %3d %s\n", idx, argv[idx]);
-        if (!doOpt || !(argv[idx][0] == '-' && argv[idx][1] == '-')) {
+        if (!doOptions || !(argv[idx][0] == '-' && argv[idx][1] == '-')) {
             // treat as a file name
             //
-            oxcell *a = oxf_fread(oxcell_factory_cstring(argv[idx]), oxenv);
-            if (!OXISNIL(OXCREST(a))) {
+            oxcell *result = oxf_fread(oxcell_factory_cstring(argv[idx]), oxenv);
+            oxcell *text = OXCFIRST(result);
+            oxcell *err = OXCREST(result);
+            if (!OXISNIL(err)) {
                 printf("...ox: error reading file\n");
                 printf(".....: %-18s == '%s'\n", "fileName", argv[idx]);
-                printf(".....: %-18s == '%s'\n", "errorMsg", OXCTEXT(OXCFIRST(OXCREST(a)))->data);
+                printf(".....: %-18s == '%s'\n", "errorMsg", OXCTEXT(OXCFIRST(err))->data);
                 return 2;
             }
-            oxf_prexpr(OXCFIRST(a), oxenv);
-            printf("\n");
+            if (doDumpInput) {
+                printf("\n----------------------------------\n");
+                oxf_prexpr(text, oxenv);
+                //oxf_prexpr(oxcell_factory(oxcName, oxtext_from_cstring("\n\n")), oxenv);
+                printf("\n----------------------------------\n");
+            }
 
-            // debug step - dump out all of the tokens in the file
-            //
-            oxcell *t = oxf_token_read(a, oxenv);
-            oxf_prexpr(OXCFIRST(t), oxenv);
-            printf("\n");
+            if (doDumpTokens) {
+                printf("\n----------------------------------\n");
+                // debug step - dump out all of the tokens in the file
+                //
+                result = oxf_token_read(text, oxenv);
+                oxcell *token = OXCFIRST(result);
+                err = OXCREST(result);
+                while (OXISNIL(err) && !(OXISTOKEN(token) && OXCTOKEN(token)->kind == oxTokEOF)) {
+                    oxf_prexpr(token, oxenv);
+                    printf("\n");
+                    result = oxf_token_read(text, oxenv);
+                    token = OXCFIRST(result);
+                    err = OXCREST(result);
+                }
+                if (!OXISNIL(err)) {
+                    // should be end-of-input
+                    printf("...ox: error reading token from file\n");
+                    printf(".....: %-18s == '%s'\n", "fileName", argv[idx]);
+                    printf(".....: %-18s == '%s'\n", "errorMsg", OXCTEXT(OXCFIRST(err))->data);
+                    return 2;
+                }
+
+                // reset the stream
+                //
+                OXCTEXT(text)->curr       = OXCTEXT(text)->data;
+                OXCTEXT(text)->lineNumber = 1;
+
+                printf("\n----------------------------------\n");
+            }
 #if 0
 
             a = oxtext_from_file(argv[idx]);
@@ -876,7 +938,7 @@ int main(int argc, const char * argv[]) {
             }
 #endif
         } else if (argv[idx][0] == '-' && argv[idx][1] == '-' && argv[idx][3] == 0) {
-            doOpt = 0;
+            doOptions = 0;
         } else if (argv[idx][0] == '-' && argv[idx][1] == '-') {
             char *opt = strdup(argv[idx]);
             if (!opt) {
@@ -895,14 +957,32 @@ int main(int argc, const char * argv[]) {
             
             if (!strcmp(opt, "--help")) {
                 return 0;
-            } else if (!strcmp(opt, "--check-file")) {
+            } else if (!strcmp(opt, "--check-file") && !val) {
                 doCheck = -1;
-                doEval  =  0;
+            } else if (!strcmp(opt, "--check-file") && val && (!strcmp(val, "false") || !strcmp(val, "no"))) {
+                doCheck = 0;
+            } else if (!strcmp(opt, "--check-file") && val && (!strcmp(val, "true") || !strcmp(val, "yes"))) {
+                doCheck = -1;
             } else if (!strcmp(opt, "--eval-file")) {
-                doCheck =  0;
                 doEval  = -1;
-            } else if (!strcmp(opt, "--debug")) {
+            } else if (!strcmp(opt, "--eval-file") && val && (!strcmp(val, "false") || !strcmp(val, "no"))) {
+                doEval = 0;
+            } else if (!strcmp(opt, "--eval-file") && val && (!strcmp(val, "true") || !strcmp(val, "yes"))) {
+                doEval = -1;
+            } else if (!strcmp(opt, "--debug") && !val) {
                 debugLevel++;
+            } else if (!strcmp(opt, "--debug") && val && (!strcmp(val, "false") || !strcmp(val, "no"))) {
+                debugLevel = 0;
+            } else if (!strcmp(opt, "--debug") && val && (!strcmp(val, "true") || !strcmp(val, "yes"))) {
+                debugLevel = 13;
+            } else if (!strcmp(opt, "--dump") && val && !strcmp(val, "input")) {
+                doDumpInput = -1;
+            } else if (!strcmp(opt, "--dump") && val && !strcmp(val, "tokens")) {
+                doDumpTokens = - 1;
+            } else if (!strcmp(opt, "--no-dump") && val && !strcmp(val, "input")) {
+                doDumpInput = 0;
+            } else if (!strcmp(opt, "--no-dump") && val && !strcmp(val, "tokens")) {
+                doDumpTokens = 0;
             } else {
                 fprintf(stderr, "error:\tinvalid option '%s'\n", argv[idx]);
                 return 2;

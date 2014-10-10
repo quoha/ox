@@ -59,7 +59,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--check-file"
+            argument = "--check-file=false"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--eval-file=false"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -68,6 +72,14 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--eval-file"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--dump=input"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--dump=tokens"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
