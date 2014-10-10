@@ -124,8 +124,9 @@ const char *oxtok_toktype(oxtoken *t);
 
 // built in functions
 //
+oxcell *oxf_expr_print(oxcell *arg, oxcell *env);
+oxcell *oxf_expr_read(oxcell *arg, oxcell *env);
 oxcell *oxf_fread(oxcell *arg, oxcell *env);
-oxcell *oxf_prexpr(oxcell *arg, oxcell *env);
 oxcell *oxf_token_read(oxcell *arg, oxcell *env);
 
 unsigned char *strrcpy(unsigned char *src, size_t length);
@@ -222,44 +223,70 @@ oxcell *oxcell_get_true(void) {
     return oxtrue;
 }
 
-#if 0
-// dangerous? accept cells but only read text.
-//
 // returns the traditional (data err) list. if err is non-nil then we
 // had a problem (most likely end-of-input).
 //
-oxcell *oxexpr_read(oxcell *ib) {
-    oxtoken *t = oxtok_read(ib);
+oxcell *oxf_expr_read(oxcell *arg, oxcell *env) {
+    // we will return our result. the data is in the car of the list
+    // and any error message is in the cdr.
+    //
+    oxcell *result = oxcell_factory(oxcList, oxnil, oxnil);
     
-    switch (t->kind) {
+    // confirm that our argument is text
+    //
+    if (arg->kind != oxcText) {
+        OXCFIRST(result) = oxnil;
+        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*input-is-not-text*"), oxnil);
+        return result;
+    }
+    
+    oxtext *text = arg->u.atom.text;
+
+    result = oxf_token_read(text, env);
+    oxcell *token = OXCFIRST(result);
+    oxcell *err = OXCREST(result);
+    if (!OXISNIL(err)) {
+        return result;
+    }
+
+    switch (OXCTOKEN(token)->kind) {
         case oxTokCloseParen:
             printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
             printf("error:\tunexpected ')' in input\n");
             exit(1);
         case oxTokEOF:
-            return 0;
+            OXCFIRST(result) = oxnil;
+            OXCREST(result) = oxcell_factory(oxcList, oxcell_factory_cstring("*end-of-input*"), oxnil);
+            break;
         case oxTokInteger:
-            return oxcell_alloc_integer(t->value.integer);
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcInteger, OXCINTEGER(OXCTOKEN(token)->value)), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
         case oxTokOpenParen:
-            return oxexpr_read_tail(ib);
+            //return oxexpr_read_tail(arg, oxnil);
+            OXCFIRST(result) = oxnil;
+            OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-open-paren-not-implemented*"), oxnil);
+            break;
         case oxTokReal:
-            return oxcell_alloc_real(t->value.real);
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcReal, OXCREAL(OXCTOKEN(token)->value)), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
         case oxTokName:
-            return oxcell_alloc_symbol(oxcell_alloc_text(t->value.name, strlen(t->value.name)), 0);
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcName, OXCNAME(OXCTOKEN(token)->value)), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
+        case oxTokSingleQuote:
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-single-quote-not-implemented*"), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
         case oxTokText:
-            return oxcell_alloc_cstring(t->value.text);
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcText, OXCTEXT(OXCTOKEN(token)->value)), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
     }
-    
-    if (1) {
-        printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-        printf("error:\tinternal error - unhandled token %d\n", t->kind);
-        exit(2);
-    }
-    
-    // NOT REACHED
-    return 0;
+
+    return result;
 }
-#endif
 
 // returns the traditional (data err) list. if err is non-nil then we
 // had a problem (most likely end-of-input).
@@ -291,7 +318,7 @@ oxcell *oxf_fread(oxcell *arg, oxcell *env) {
     return result;
 }
 
-oxcell *oxf_prexpr(oxcell *arg, oxcell *env) {
+oxcell *oxf_expr_print(oxcell *arg, oxcell *env) {
     oxcell *text;
     oxcell *value;
 
@@ -315,7 +342,7 @@ oxcell *oxf_prexpr(oxcell *arg, oxcell *env) {
         case oxcList:
             printf("( ");
             while (arg != oxnil) {
-                oxf_prexpr(OXCFIRST(arg), env);
+                oxf_expr_print(OXCFIRST(arg), env);
                 arg = OXCREST(arg);
             }
             printf(") ");
@@ -878,7 +905,7 @@ int main(int argc, const char * argv[]) {
             }
             if (doDumpInput) {
                 printf("\n----------------------------------\n");
-                oxf_prexpr(text, oxenv);
+                oxf_expr_print(text, oxenv);
                 //oxf_prexpr(oxcell_factory(oxcName, oxtext_from_cstring("\n\n")), oxenv);
                 printf("\n----------------------------------\n");
             }
@@ -891,7 +918,7 @@ int main(int argc, const char * argv[]) {
                 oxcell *token = OXCFIRST(result);
                 err = OXCREST(result);
                 while (OXISNIL(err) && !(OXISTOKEN(token) && OXCTOKEN(token)->kind == oxTokEOF)) {
-                    oxf_prexpr(token, oxenv);
+                    oxf_expr_print(token, oxenv);
                     printf("\n");
                     result = oxf_token_read(text, oxenv);
                     token = OXCFIRST(result);
@@ -914,33 +941,42 @@ int main(int argc, const char * argv[]) {
             }
             
             if (doEval) {
-                
-            }
+                // eval the script
+                result = oxf_expr_read(text, oxenv);
+                oxcell *expr = OXCFIRST(result);
+                err = OXCREST(result);
+                while (OXISNIL(err)) {
+                    printf(": ");
+                    oxf_expr_print(expr, oxenv);
+                    printf("\n");
+                    result = oxf_expr_read(text, oxenv);
+                    expr = OXCFIRST(result);
+                    err = OXCREST(result);
+                }
+
 #if 0
-
-            a = oxtext_from_file(argv[idx]);
-            if (!a) {
-                perror(argv[idx]);
-                return 0;
-            }
-
-            // eval the script
-            oxcell *expr;
-            for (expr = oxexpr_read(a); expr; expr = oxexpr_read(a)) {
-                printf(": ");
-                oxcell_print(expr);
-                printf("\n");
-                oxcell_dump(expr, 0);
-                if (expr)                     return 2;
-                
-                /* NOT REACHED */
-                oxcell *result = oxeval(expr, oxenv);
-                
-                printf("= ");
-                oxcell_print(result);
-                printf("\n");
-            }
+                for (expr = oxf_expr_read(text, oxenv); expr; expr = oxf_expr_read(text, oxenv)) {
+                    oxcell *result = oxeval(expr, oxenv);
+                    printf("= ");
+                    oxcell_print(result);
+                    printf("\n");
+                }
 #endif
+                if (!OXISNIL(err)) {
+                    // should be end-of-input
+                    printf("...ox: error reading token from file\n");
+                    printf(".....: %-18s == '%s'\n", "fileName", argv[idx]);
+                    printf(".....: %-18s == '%s'\n", "errorMsg", OXCTEXT(OXCFIRST(err))->data);
+                    return 2;
+                }
+                
+                // reset the stream
+                //
+                OXCTEXT(text)->curr       = OXCTEXT(text)->data;
+                OXCTEXT(text)->lineNumber = 1;
+                
+                printf("\n----------------------------------\n");
+            }
         } else if (argv[idx][0] == '-' && argv[idx][1] == '-' && argv[idx][3] == 0) {
             doOptions = 0;
         } else if (argv[idx][0] == '-' && argv[idx][1] == '-') {
