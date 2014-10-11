@@ -305,6 +305,97 @@ oxcell *oxf_expr_print(oxcell *args, oxcell *env) {
     return oxnil;
 }
 
+//   usage: (append arg1 arg2)
+// returns: (arg1 arg2)
+//    note: this is not the same as (arg1 (arg2))
+//
+oxcell *oxf_append(oxcell *args, oxcell *env) {
+    oxcell *result = oxnil;
+    oxcell *arg1 = OXCFIRST(args);
+    oxcell *arg2 = OXCREST(args);
+    if (OXISNIL(arg2)) {
+        result = arg1;
+    } else {
+        oxcell *tail;
+        result = tail = oxcell_factory(oxcList, arg1, oxnil);
+        arg1 = OXCREST(arg1);
+        
+        while (!OXISNIL(args)) {
+            tail = OXCREST(tail) = oxcell_factory(oxcList, OXCFIRST(arg1), oxnil);
+            arg1 = OXCREST(arg1);
+        }
+
+        OXCREST(tail) = oxcell_factory(oxcList, arg2, oxnil);
+    }
+
+    return result;
+}
+
+//   usage: (list args)
+// returns: args
+//
+oxcell *oxf_list(oxcell *args, oxcell *env) {
+    oxcell *result = oxnil;
+
+    // easy to convert an atom into a list
+    //
+    if (!OXISLIST(args)) {
+        result = oxcell_factory(oxcList, args, oxnil);
+    } else if (OXISLIST(args)) {
+        // otherwise arts is already a list, so just return it. seems
+        // rational since the eval function will pass us a list of
+        // arguments, right?
+        //
+        result = args;
+    } else { /* NOT REACHED */
+        // return a copy of the list
+        //
+        oxcell *tail;
+        result = tail = oxcell_factory(oxcList, OXCFIRST(args), oxnil);
+        args = OXCREST(args);
+
+        while (!OXISNIL(args)) {
+            tail = OXCREST(tail) = oxcell_factory(oxcList, OXCFIRST(args), oxnil);
+            args = OXCREST(args);
+        }
+    }
+
+    return result;
+}
+
+// before i forget
+//   read lexeme
+//   if end of input
+//     return (nil *end-of-input*)
+//   if lexeme = ')'
+//     return (nil *unexpected-close-paren*)
+//   if lexeme != '('
+//     return (lexeme nil)
+//
+//   set result to nil
+//   set expr to nil
+//
+//   for (;;;)
+//     read lexeme
+//     if end of input
+//       return (nil *unexpeced-end-of-input*)
+//     if lexeme == ')'
+//       if expr is (NULL nil)
+//         expr = (nil nil)
+//       expr = pop stack
+//       if stack is empty
+//         return (result nil)
+//     if lexeme == '('
+//       tmp = new list of NULL nil (not nil nil)
+//       append tmp to expr
+//       set expr to tmp
+//     else
+//       if expr is (NULL nil)
+//         expr = (lexeme nil)
+//       else
+//         append lexeme to expr
+//         set expr to tail of expr
+//
 //   usage: (expr-read "text")
 // returns: (#expression# errmsg)
 //
@@ -338,7 +429,7 @@ oxcell *oxf_expr_read(oxcell *args, oxcell *env) {
             exit(1);
         case oxTokEOF:
             OXCFIRST(result) = oxnil;
-            OXCREST(result) = oxcell_factory(oxcList, oxcell_factory_cstring("*end-of-input*"), oxnil);
+            OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*end-of-input*"), oxnil);
             break;
         case oxTokInteger:
             OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcInteger, OXCINTEGER(OXCTOKEN(token)->value)), oxnil);
@@ -367,30 +458,71 @@ oxcell *oxf_expr_read(oxcell *args, oxcell *env) {
     return result;
 }
 
-//   usage: ** internal function **
-// returns: (#expression# errmsg)
+// need to make this work. want to turn it into function that returns a simple
+// cell rather than the usual (data err) list.
 //
-oxcell *oxf_expr_read_tail(oxcell *args, oxcell *env) {
+//   usage: ** internal function **
+// returns: #expression# errmsg
+//
+oxcell *oxcell_expr_read_tail(oxcell *args, oxcell *env) {
     // we will return our result. the data is in the car of the list
     // and any error message is in the cdr.
     //
     oxcell *result = oxcell_factory(oxcList, oxnil, oxnil);
     
-    // confirm that our argument is text
-    //
-    if (!OXISTEXT(args)) {
-        OXCFIRST(result) = oxnil;
-        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*input-is-not-text*"), oxnil);
-        return result;
-    }
-    
-    oxcell *tokenResult = oxf_token_read(args, env);
+    oxcell *tokenResult = oxf_expr_read(args, env);
     if (!OXISNIL(OXCREST(tokenResult))) {
         OXCFIRST(result) = oxnil;
-        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-read-failed*"), OXCREST(tokenResult));
+        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-read-tail-failed*"), OXCREST(tokenResult));
         return result;
     }
 
+    oxcell *token = OXCFIRST(tokenResult);
+
+    switch (OXCTOKEN(token)->kind) {
+        case oxTokCloseParen:
+            // will return nil
+            break;
+        case oxTokEOF:
+            OXCFIRST(result) = oxnil;
+            OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*end-of-input*"), oxnil);
+            break;
+        case oxTokInteger:
+            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcInteger, OXCINTEGER(OXCTOKEN(token)->value)), oxnil);
+            OXCREST(result)  = oxnil;
+            break;
+        case oxTokOpenParen:
+            break;
+        case oxTokReal:
+            break;
+        case oxTokName:
+            break;
+        case oxTokText:
+            break;
+    }
+    
+#if 0
+    oxtoken *t = oxtok_read(ib);
+    switch (t->kind) {
+        case oxTokCloseParen:
+            return oxnil;
+        case oxTokEOF:
+            printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+            printf("error:\tunexpected end of input\n");
+            exit(1);
+        case oxTokInteger:
+            return oxcell_alloc_list(oxcell_alloc_integer(t->value.integer), oxexpr_read_tail(ib));
+        case oxTokReal:
+            return oxcell_alloc_list(oxcell_alloc_real(t->value.real), oxexpr_read_tail(ib));
+        case oxTokOpenParen:
+            return oxcell_alloc_list(oxexpr_read_tail(ib), oxexpr_read_tail(ib));
+        case oxTokName:
+            return oxcell_alloc_list(oxcell_alloc_symbol(oxcell_alloc_text(t->value.name, strlen(t->value.name)), 0), oxexpr_read_tail(ib));
+        case oxTokText:
+            return oxcell_alloc_list(oxcell_alloc_cstring(t->value.text), oxexpr_read_tail(ib));
+    }
+#endif
+    
     return result;
 }
 
