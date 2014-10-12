@@ -58,10 +58,12 @@ struct oxcell {
     oxtext *text;
     oxcell *first;
     oxcell *rest;
+    int     isEmpty;
     union {
         struct {
             oxcell          *first;
             oxcell          *rest;
+            int              isEmpty;
         } list;
         union {
             int              boolean;
@@ -82,11 +84,13 @@ struct oxcell {
 };
 
 #define OXISLIST(c)    ((c)->kind == oxcList)
+#define OXISEMPTY(c)   (OXISLIST(c) && (c)->isEmpty)
 #define OXISATOM(c)    (!(OXISLIST(c)))
 #define OXISNIL(c)     ((c) == oxnil)
 #define OXISTEXT(c)    ((c)->kind == oxcText)
 #define OXISTOKEN(c)   ((c)->kind == oxcToken)
 
+#define OXCEMPTY(c)    ((c)->isEmpty)
 //#define OXCFIRST(c)    ((c)->u.list.first)
 #define OXCFIRST(c)    ((c)->first)
 //#define OXCREST(c)     ((c)->u.list.rest)
@@ -171,6 +175,7 @@ oxcell *oxcell_factory(oxcellKind kind, ...) {
             OXCINTEGER(c) = va_arg(ap, long);
             break;
         case oxcList:
+            c->isEmpty  = 0;
             OXCFIRST(c) = va_arg(ap, oxcell *);
             OXCREST(c)  = va_arg(ap, oxcell *);
             break;
@@ -252,12 +257,16 @@ oxcell *oxf_expr_print(oxcell *args, oxcell *env) {
             printf("%ld ", OXCINTEGER(args));
             break;
         case oxcList:
-            printf("( ");
-            while (args != oxnil) {
-                oxf_expr_print(OXCFIRST(args), env);
-                args = OXCREST(args);
+            if (OXISEMPTY(OXCFIRST(args))) {
+                printf("() ");
+            } else {
+                printf("( ");
+                while (args != oxnil) {
+                    oxf_expr_print(OXCFIRST(args), env);
+                    args = OXCREST(args);
+                }
+                printf(") ");
             }
-            printf(") ");
             break;
         case oxcName:
             printf("%s ", OXCNAME(args)->data);
@@ -363,39 +372,6 @@ oxcell *oxf_list(oxcell *args, oxcell *env) {
     return result;
 }
 
-// before i forget
-//   read lexeme
-//   if end of input
-//     return (nil *end-of-input*)
-//   if lexeme = ')'
-//     return (nil *unexpected-close-paren*)
-//   if lexeme != '('
-//     return (lexeme nil)
-//
-//   set result to nil
-//   set expr to nil
-//
-//   for (;;;)
-//     read lexeme
-//     if end of input
-//       return (nil *unexpeced-end-of-input*)
-//     if lexeme == ')'
-//       if expr is (NULL nil)
-//         expr = (nil nil)
-//       expr = pop stack
-//       if stack is empty
-//         return (result nil)
-//     if lexeme == '('
-//       tmp = new list of NULL nil (not nil nil)
-//       append tmp to expr
-//       set expr to tmp
-//     else
-//       if expr is (NULL nil)
-//         expr = (lexeme nil)
-//       else
-//         append lexeme to expr
-//         set expr to tail of expr
-//
 //   usage: (expr-read "text")
 // returns: (#expression# errmsg)
 //
@@ -413,117 +389,95 @@ oxcell *oxf_expr_read(oxcell *args, oxcell *env) {
         return result;
     }
 
-    oxcell *tokenResult = oxf_token_read(args, env);
-    if (!OXISNIL(OXCREST(tokenResult))) {
-        OXCFIRST(result) = oxnil;
-        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-read-failed*"), OXCREST(tokenResult));
-        return result;
-    }
-
-    oxcell *token = OXCFIRST(tokenResult);
-
-    switch (OXCTOKEN(token)->kind) {
-        case oxTokCloseParen:
-            printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-            printf("error:\tunexpected ')' in input\n");
-            exit(1);
-        case oxTokEOF:
-            OXCFIRST(result) = oxnil;
-            OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*end-of-input*"), oxnil);
-            break;
-        case oxTokInteger:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcInteger, OXCINTEGER(OXCTOKEN(token)->value)), oxnil);
-            OXCREST(result)  = oxnil;
-            break;
-        case oxTokOpenParen:
-            //return oxexpr_read_tail(arg, oxnil);
-            OXCFIRST(result) = oxnil;
-            OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-open-paren-not-implemented*"), oxnil);
-            //return oxexpr_read_tail(arg, oxnil);
-            break;
-        case oxTokReal:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcReal, OXCREAL(OXCTOKEN(token)->value)), oxnil);
-            OXCREST(result)  = oxnil;
-            break;
-        case oxTokName:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcName, OXCNAME(OXCTOKEN(token)->value)), oxnil);
-            OXCREST(result)  = oxnil;
-            break;
-        case oxTokText:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcText, OXCTEXT(OXCTOKEN(token)->value)), oxnil);
-            OXCREST(result)  = oxnil;
-            break;
-    }
-
-    return result;
-}
-
-// need to make this work. want to turn it into function that returns a simple
-// cell rather than the usual (data err) list.
-//
-//   usage: ** internal function **
-// returns: #expression# errmsg
-//
-oxcell *oxcell_expr_read_tail(oxcell *args, oxcell *env) {
-    // we will return our result. the data is in the car of the list
-    // and any error message is in the cdr.
+    // read the next token from the input
     //
-    oxcell *result = oxcell_factory(oxcList, oxnil, oxnil);
-    
-    oxcell *tokenResult = oxf_expr_read(args, env);
-    if (!OXISNIL(OXCREST(tokenResult))) {
+    oxcell *read = oxf_token_read(args, env);
+    if (!OXISNIL(OXCREST(read))) {
         OXCFIRST(result) = oxnil;
-        OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*expr-read-tail-failed*"), OXCREST(tokenResult));
+        OXCREST(result)  = oxcell_factory_cstring("*expr-read-failed*");
         return result;
     }
 
-    oxcell *token = OXCFIRST(tokenResult);
-
+    oxcell *token = OXCFIRST(read);
     switch (OXCTOKEN(token)->kind) {
         case oxTokCloseParen:
-            // will return nil
-            break;
+            OXCFIRST(result) = oxnil;
+            OXCREST(result)  = oxcell_factory_cstring("*error-in-input*");
+            return result;
         case oxTokEOF:
             OXCFIRST(result) = oxnil;
-            OXCREST(result)  = oxcell_factory(oxcList, oxcell_factory_cstring("*end-of-input*"), oxnil);
-            break;
+            OXCREST(result)  = oxcell_factory_cstring("*end-of-input*");
+            return result;
         case oxTokInteger:
-            OXCFIRST(result) = oxcell_factory(oxcList, oxcell_factory(oxcInteger, OXCINTEGER(OXCTOKEN(token)->value)), oxnil);
+            OXCFIRST(result) = oxcell_factory(oxcInteger, OXCINTEGER(OXCTOKEN(token)->value));
             OXCREST(result)  = oxnil;
-            break;
+            return result;
         case oxTokOpenParen:
             break;
         case oxTokReal:
-            break;
+            OXCFIRST(result) = oxcell_factory(oxcReal, OXCREAL(OXCTOKEN(token)->value));
+            OXCREST(result)  = oxnil;
+            return result;
         case oxTokName:
-            break;
+            OXCFIRST(result) = oxcell_factory(oxcName, OXCNAME(OXCTOKEN(token)->value));
+            OXCREST(result)  = oxnil;
+            return result;
         case oxTokText:
-            break;
+            OXCFIRST(result) = oxcell_factory(oxcText, OXCTEXT(OXCTOKEN(token)->value));
+            OXCREST(result)  = oxnil;
+            return result;
     }
-    
-#if 0
-    oxtoken *t = oxtok_read(ib);
-    switch (t->kind) {
-        case oxTokCloseParen:
-            return oxnil;
-        case oxTokEOF:
-            printf("error:\t%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-            printf("error:\tunexpected end of input\n");
-            exit(1);
-        case oxTokInteger:
-            return oxcell_alloc_list(oxcell_alloc_integer(t->value.integer), oxexpr_read_tail(ib));
-        case oxTokReal:
-            return oxcell_alloc_list(oxcell_alloc_real(t->value.real), oxexpr_read_tail(ib));
-        case oxTokOpenParen:
-            return oxcell_alloc_list(oxexpr_read_tail(ib), oxexpr_read_tail(ib));
-        case oxTokName:
-            return oxcell_alloc_list(oxcell_alloc_symbol(oxcell_alloc_text(t->value.name, strlen(t->value.name)), 0), oxexpr_read_tail(ib));
-        case oxTokText:
-            return oxcell_alloc_list(oxcell_alloc_cstring(t->value.text), oxexpr_read_tail(ib));
+
+
+    oxcell *tail = oxnil;
+    oxcell *expr = oxnil;
+
+    for (read = oxf_expr_read(args, env); OXISNIL(OXCREST(read)); read = oxf_expr_read(args, env)) {
+        oxcell *token = OXCFIRST(read);
+
+        switch (OXCTOKEN(token)->kind) {
+            case oxTokCloseParen:
+                if (OXISNIL(OXCFIRST(result))) {
+                    OXCFIRST(result) = oxcell_factory(oxcList, oxnil, oxnil);
+                    OXCEMPTY(OXCFIRST(result)) = -1;
+                }
+                return result;
+            case oxTokEOF:
+                OXCFIRST(result) = oxnil;
+                OXCREST(result)  = oxcell_factory_cstring("*unexpected-end-of-input*");
+                return result;
+            case oxTokInteger:
+                expr = oxcell_factory(oxcInteger, OXCINTEGER(OXCTOKEN(token)->value));
+                break;
+            case oxTokOpenParen:
+                expr = oxf_expr_read(args, env);
+                if (!OXISNIL(OXCREST(expr))) {
+                    return expr;
+                }
+                expr = OXCFIRST(expr);
+                break;
+            case oxTokReal:
+                expr = oxcell_factory(oxcReal, OXCREAL(OXCTOKEN(token)->value));
+                break;
+            case oxTokName:
+                expr = oxcell_factory(oxcName, OXCNAME(OXCTOKEN(token)->value));
+                break;
+            case oxTokText:
+                expr = oxcell_factory(oxcText, OXCTEXT(OXCTOKEN(token)->value));
+                break;
+        }
+
+        if (OXISNIL(tail)) {
+            OXCFIRST(result) = expr;
+        } else {
+            OXCREST(tail) = oxcell_factory(oxcList, expr, oxnil);
+        }
+        tail = expr;
     }
-#endif
-    
-    return result;
+
+    // if we get here, there was an error
+    //
+    return read;
 }
 
 //   usage: (fread "filename")
