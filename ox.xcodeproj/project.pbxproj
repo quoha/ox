@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		29A4A7CB19DC88E300188555 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4A7CA19DC88E300188555 /* main.c */; };
-		29D67C9919EAF998004421BC /* dynload.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D67C9319EAF998004421BC /* dynload.c */; };
-		29D67C9A19EAF998004421BC /* scheme.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D67C9719EAF998004421BC /* scheme.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,12 +26,6 @@
 		29A4A7C719DC88E300188555 /* ox */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ox; sourceTree = BUILT_PRODUCTS_DIR; };
 		29A4A7CA19DC88E300188555 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		29A4A7D119DCF3D500188555 /* local.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = local.h; sourceTree = "<group>"; };
-		29D67C9319EAF998004421BC /* dynload.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dynload.c; path = "tinyscheme-1.41/dynload.c"; sourceTree = "<group>"; };
-		29D67C9419EAF998004421BC /* dynload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dynload.h; path = "tinyscheme-1.41/dynload.h"; sourceTree = "<group>"; };
-		29D67C9519EAF998004421BC /* opdefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = opdefines.h; path = "tinyscheme-1.41/opdefines.h"; sourceTree = "<group>"; };
-		29D67C9619EAF998004421BC /* scheme-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "scheme-private.h"; path = "tinyscheme-1.41/scheme-private.h"; sourceTree = "<group>"; };
-		29D67C9719EAF998004421BC /* scheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = scheme.c; path = "tinyscheme-1.41/scheme.c"; sourceTree = "<group>"; };
-		29D67C9819EAF998004421BC /* scheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scheme.h; path = "tinyscheme-1.41/scheme.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,22 +60,8 @@
 			children = (
 				29A4A7D119DCF3D500188555 /* local.h */,
 				29A4A7CA19DC88E300188555 /* main.c */,
-				29D67C9B19EAF9A2004421BC /* tinyscheme-1.41 */,
 			);
 			path = ox;
-			sourceTree = "<group>";
-		};
-		29D67C9B19EAF9A2004421BC /* tinyscheme-1.41 */ = {
-			isa = PBXGroup;
-			children = (
-				29D67C9319EAF998004421BC /* dynload.c */,
-				29D67C9419EAF998004421BC /* dynload.h */,
-				29D67C9519EAF998004421BC /* opdefines.h */,
-				29D67C9619EAF998004421BC /* scheme-private.h */,
-				29D67C9719EAF998004421BC /* scheme.c */,
-				29D67C9819EAF998004421BC /* scheme.h */,
-			);
-			name = "tinyscheme-1.41";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -143,8 +121,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				29A4A7CB19DC88E300188555 /* main.c in Sources */,
-				29D67C9A19EAF998004421BC /* scheme.c in Sources */,
-				29D67C9919EAF998004421BC /* dynload.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
