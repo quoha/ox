@@ -7,7 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		29953A9219EB1CF0006AA1FD /* bignum.c in Sources */ = {isa = PBXBuildFile; fileRef = 29953A9119EB1CF0006AA1FD /* bignum.c */; };
+		29953A9419EB1D29006AA1FD /* sexp.c in Sources */ = {isa = PBXBuildFile; fileRef = 29953A9319EB1D29006AA1FD /* sexp.c */; };
+		29953A9619EB1DC9006AA1FD /* gc.c in Sources */ = {isa = PBXBuildFile; fileRef = 29953A9519EB1DC9006AA1FD /* gc.c */; };
+		29953A9819EB1DF7006AA1FD /* eval.c in Sources */ = {isa = PBXBuildFile; fileRef = 29953A9719EB1DF7006AA1FD /* eval.c */; };
+		29953A9A19EB1FF9006AA1FD /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 29953A9919EB1FF9006AA1FD /* opcodes.c */; };
+		29953A9C19EB203E006AA1FD /* simplify.c in Sources */ = {isa = PBXBuildFile; fileRef = 29953A9B19EB203E006AA1FD /* simplify.c */; };
 		29A4A7CB19DC88E300188555 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4A7CA19DC88E300188555 /* main.c */; };
+		29D67C9E19EB07D7004421BC /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D67C9D19EB07D7004421BC /* vm.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,9 +30,20 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		29953A9119EB1CF0006AA1FD /* bignum.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bignum.c; path = "chibi-scheme-0.7/bignum.c"; sourceTree = "<group>"; };
+		29953A9319EB1D29006AA1FD /* sexp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sexp.c; path = "chibi-scheme-0.7/sexp.c"; sourceTree = "<group>"; };
+		29953A9519EB1DC9006AA1FD /* gc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = gc.c; path = "chibi-scheme-0.7/gc.c"; sourceTree = "<group>"; };
+		29953A9719EB1DF7006AA1FD /* eval.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = eval.c; path = "chibi-scheme-0.7/eval.c"; sourceTree = "<group>"; };
+		29953A9919EB1FF9006AA1FD /* opcodes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = opcodes.c; path = "chibi-scheme-0.7/opcodes.c"; sourceTree = "<group>"; };
+		29953A9B19EB203E006AA1FD /* simplify.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = simplify.c; path = "chibi-scheme-0.7/simplify.c"; sourceTree = "<group>"; };
 		29A4A7C719DC88E300188555 /* ox */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ox; sourceTree = BUILT_PRODUCTS_DIR; };
 		29A4A7CA19DC88E300188555 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		29A4A7D119DCF3D500188555 /* local.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = local.h; sourceTree = "<group>"; };
+		29D67C9D19EB07D7004421BC /* vm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vm.c; path = "chibi-scheme-0.7/vm.c"; sourceTree = "<group>"; };
+		29D67CA119EB082C004421BC /* bignum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bignum.h; sourceTree = "<group>"; };
+		29D67CA219EB082C004421BC /* eval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = eval.h; sourceTree = "<group>"; };
+		29D67CA319EB082C004421BC /* features.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = features.h; sourceTree = "<group>"; };
+		29D67CA419EB082C004421BC /* sexp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sexp.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,8 +78,44 @@
 			children = (
 				29A4A7D119DCF3D500188555 /* local.h */,
 				29A4A7CA19DC88E300188555 /* main.c */,
+				29D67C9C19EB065C004421BC /* chibi-scheme-0.7 */,
 			);
 			path = ox;
+			sourceTree = "<group>";
+		};
+		29D67C9C19EB065C004421BC /* chibi-scheme-0.7 */ = {
+			isa = PBXGroup;
+			children = (
+				29953A9119EB1CF0006AA1FD /* bignum.c */,
+				29953A9719EB1DF7006AA1FD /* eval.c */,
+				29953A9519EB1DC9006AA1FD /* gc.c */,
+				29953A9919EB1FF9006AA1FD /* opcodes.c */,
+				29953A9319EB1D29006AA1FD /* sexp.c */,
+				29953A9B19EB203E006AA1FD /* simplify.c */,
+				29D67C9D19EB07D7004421BC /* vm.c */,
+				29D67C9F19EB082C004421BC /* include */,
+			);
+			name = "chibi-scheme-0.7";
+			sourceTree = "<group>";
+		};
+		29D67C9F19EB082C004421BC /* include */ = {
+			isa = PBXGroup;
+			children = (
+				29D67CA019EB082C004421BC /* chibi */,
+			);
+			name = include;
+			path = "chibi-scheme-0.7/include";
+			sourceTree = "<group>";
+		};
+		29D67CA019EB082C004421BC /* chibi */ = {
+			isa = PBXGroup;
+			children = (
+				29D67CA119EB082C004421BC /* bignum.h */,
+				29D67CA219EB082C004421BC /* eval.h */,
+				29D67CA319EB082C004421BC /* features.h */,
+				29D67CA419EB082C004421BC /* sexp.h */,
+			);
+			path = chibi;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -120,7 +174,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29953A9C19EB203E006AA1FD /* simplify.c in Sources */,
+				29D67C9E19EB07D7004421BC /* vm.c in Sources */,
+				29953A9219EB1CF0006AA1FD /* bignum.c in Sources */,
+				29953A9619EB1DC9006AA1FD /* gc.c in Sources */,
+				29953A9819EB1DF7006AA1FD /* eval.c in Sources */,
+				29953A9A19EB1FF9006AA1FD /* opcodes.c in Sources */,
 				29A4A7CB19DC88E300188555 /* main.c in Sources */,
+				29953A9419EB1D29006AA1FD /* sexp.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
