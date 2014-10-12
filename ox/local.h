@@ -8,8 +8,4 @@
 #ifndef ox_local_h
 #define ox_local_h
 
-typedef struct oxatom oxatom;
-typedef struct oxcell oxcell;
-typedef struct oxval  oxval;
-
 #endif

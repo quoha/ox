@@ -7,19 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		298AF7AC19DF7D5F00128497 /* oxparser.c in Sources */ = {isa = PBXBuildFile; fileRef = 298AF7AA19DF7D5F00128497 /* oxparser.c */; };
 		29A4A7CB19DC88E300188555 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4A7CA19DC88E300188555 /* main.c */; };
-		29A4A7DB19DDABB800188555 /* oxbuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 29A4A7D919DDABB800188555 /* oxbuf.c */; };
-		29C1515A19E2996300D25CA6 /* oxalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1515819E2996300D25CA6 /* oxalloc.c */; };
-		29C1515D19E29AD300D25CA6 /* oxutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1515B19E29AD300D25CA6 /* oxutil.c */; };
-		29C1516019E29CD100D25CA6 /* oxprim.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1515E19E29CD100D25CA6 /* oxprim.c */; };
-		29C1516319E29DC200D25CA6 /* oxeval.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1516119E29DC200D25CA6 /* oxeval.c */; };
-		29C1516619E29FE300D25CA6 /* oxprint.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1516419E29FE300D25CA6 /* oxprint.c */; };
-		29C1516919E2A05900D25CA6 /* oxinit.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1516719E2A05900D25CA6 /* oxinit.c */; };
-		29C1516C19E4E74A00D25CA6 /* oxcell.c in Sources */ = {isa = PBXBuildFile; fileRef = 29C1516A19E4E74A00D25CA6 /* oxcell.c */; };
-		29E873AE19DDAE240098447B /* oxval.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873AC19DDAE240098447B /* oxval.c */; };
-		29E873B419DDDE380098447B /* oxchunk.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873B219DDDE380098447B /* oxchunk.c */; };
-		29E873B719DF42AC0098447B /* oxtype.c in Sources */ = {isa = PBXBuildFile; fileRef = 29E873B519DF42AC0098447B /* oxtype.c */; };
+		29D67C9919EAF998004421BC /* dynload.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D67C9319EAF998004421BC /* dynload.c */; };
+		29D67C9A19EAF998004421BC /* scheme.c in Sources */ = {isa = PBXBuildFile; fileRef = 29D67C9719EAF998004421BC /* scheme.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -35,33 +25,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		298AF7AA19DF7D5F00128497 /* oxparser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxparser.c; sourceTree = "<group>"; };
-		298AF7AB19DF7D5F00128497 /* oxparser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxparser.h; sourceTree = "<group>"; };
 		29A4A7C719DC88E300188555 /* ox */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ox; sourceTree = BUILT_PRODUCTS_DIR; };
 		29A4A7CA19DC88E300188555 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		29A4A7D119DCF3D500188555 /* local.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = local.h; sourceTree = "<group>"; };
-		29A4A7D919DDABB800188555 /* oxbuf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxbuf.c; sourceTree = "<group>"; };
-		29A4A7DA19DDABB800188555 /* oxbuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxbuf.h; sourceTree = "<group>"; };
-		29C1515819E2996300D25CA6 /* oxalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxalloc.c; sourceTree = "<group>"; };
-		29C1515919E2996300D25CA6 /* oxalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxalloc.h; sourceTree = "<group>"; };
-		29C1515B19E29AD300D25CA6 /* oxutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxutil.c; sourceTree = "<group>"; };
-		29C1515C19E29AD300D25CA6 /* oxutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxutil.h; sourceTree = "<group>"; };
-		29C1515E19E29CD100D25CA6 /* oxprim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxprim.c; sourceTree = "<group>"; };
-		29C1515F19E29CD100D25CA6 /* oxprim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxprim.h; sourceTree = "<group>"; };
-		29C1516119E29DC200D25CA6 /* oxeval.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxeval.c; sourceTree = "<group>"; };
-		29C1516219E29DC200D25CA6 /* oxeval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxeval.h; sourceTree = "<group>"; };
-		29C1516419E29FE300D25CA6 /* oxprint.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxprint.c; sourceTree = "<group>"; };
-		29C1516519E29FE300D25CA6 /* oxprint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxprint.h; sourceTree = "<group>"; };
-		29C1516719E2A05900D25CA6 /* oxinit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxinit.c; sourceTree = "<group>"; };
-		29C1516819E2A05900D25CA6 /* oxinit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxinit.h; sourceTree = "<group>"; };
-		29C1516A19E4E74A00D25CA6 /* oxcell.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxcell.c; sourceTree = "<group>"; };
-		29C1516B19E4E74A00D25CA6 /* oxcell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxcell.h; sourceTree = "<group>"; };
-		29E873AC19DDAE240098447B /* oxval.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxval.c; sourceTree = "<group>"; };
-		29E873AD19DDAE240098447B /* oxval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxval.h; sourceTree = "<group>"; };
-		29E873B219DDDE380098447B /* oxchunk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxchunk.c; sourceTree = "<group>"; };
-		29E873B319DDDE380098447B /* oxchunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxchunk.h; sourceTree = "<group>"; };
-		29E873B519DF42AC0098447B /* oxtype.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = oxtype.c; sourceTree = "<group>"; };
-		29E873B619DF42AC0098447B /* oxtype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = oxtype.h; sourceTree = "<group>"; };
+		29D67C9319EAF998004421BC /* dynload.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dynload.c; path = "tinyscheme-1.41/dynload.c"; sourceTree = "<group>"; };
+		29D67C9419EAF998004421BC /* dynload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dynload.h; path = "tinyscheme-1.41/dynload.h"; sourceTree = "<group>"; };
+		29D67C9519EAF998004421BC /* opdefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = opdefines.h; path = "tinyscheme-1.41/opdefines.h"; sourceTree = "<group>"; };
+		29D67C9619EAF998004421BC /* scheme-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "scheme-private.h"; path = "tinyscheme-1.41/scheme-private.h"; sourceTree = "<group>"; };
+		29D67C9719EAF998004421BC /* scheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = scheme.c; path = "tinyscheme-1.41/scheme.c"; sourceTree = "<group>"; };
+		29D67C9819EAF998004421BC /* scheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scheme.h; path = "tinyscheme-1.41/scheme.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,32 +68,22 @@
 			children = (
 				29A4A7D119DCF3D500188555 /* local.h */,
 				29A4A7CA19DC88E300188555 /* main.c */,
-				29C1515819E2996300D25CA6 /* oxalloc.c */,
-				29C1515919E2996300D25CA6 /* oxalloc.h */,
-				29A4A7D919DDABB800188555 /* oxbuf.c */,
-				29A4A7DA19DDABB800188555 /* oxbuf.h */,
-				29C1516A19E4E74A00D25CA6 /* oxcell.c */,
-				29C1516B19E4E74A00D25CA6 /* oxcell.h */,
-				29E873B219DDDE380098447B /* oxchunk.c */,
-				29E873B319DDDE380098447B /* oxchunk.h */,
-				29C1516119E29DC200D25CA6 /* oxeval.c */,
-				29C1516219E29DC200D25CA6 /* oxeval.h */,
-				29C1516719E2A05900D25CA6 /* oxinit.c */,
-				29C1516819E2A05900D25CA6 /* oxinit.h */,
-				298AF7AA19DF7D5F00128497 /* oxparser.c */,
-				298AF7AB19DF7D5F00128497 /* oxparser.h */,
-				29C1515E19E29CD100D25CA6 /* oxprim.c */,
-				29C1515F19E29CD100D25CA6 /* oxprim.h */,
-				29C1516419E29FE300D25CA6 /* oxprint.c */,
-				29C1516519E29FE300D25CA6 /* oxprint.h */,
-				29E873B519DF42AC0098447B /* oxtype.c */,
-				29E873B619DF42AC0098447B /* oxtype.h */,
-				29C1515B19E29AD300D25CA6 /* oxutil.c */,
-				29C1515C19E29AD300D25CA6 /* oxutil.h */,
-				29E873AC19DDAE240098447B /* oxval.c */,
-				29E873AD19DDAE240098447B /* oxval.h */,
+				29D67C9B19EAF9A2004421BC /* tinyscheme-1.41 */,
 			);
 			path = ox;
+			sourceTree = "<group>";
+		};
+		29D67C9B19EAF9A2004421BC /* tinyscheme-1.41 */ = {
+			isa = PBXGroup;
+			children = (
+				29D67C9319EAF998004421BC /* dynload.c */,
+				29D67C9419EAF998004421BC /* dynload.h */,
+				29D67C9519EAF998004421BC /* opdefines.h */,
+				29D67C9619EAF998004421BC /* scheme-private.h */,
+				29D67C9719EAF998004421BC /* scheme.c */,
+				29D67C9819EAF998004421BC /* scheme.h */,
+			);
+			name = "tinyscheme-1.41";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -180,19 +142,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				29C1516C19E4E74A00D25CA6 /* oxcell.c in Sources */,
-				29A4A7DB19DDABB800188555 /* oxbuf.c in Sources */,
-				29C1516019E29CD100D25CA6 /* oxprim.c in Sources */,
-				29C1516919E2A05900D25CA6 /* oxinit.c in Sources */,
 				29A4A7CB19DC88E300188555 /* main.c in Sources */,
-				29E873B419DDDE380098447B /* oxchunk.c in Sources */,
-				29C1516319E29DC200D25CA6 /* oxeval.c in Sources */,
-				29C1515A19E2996300D25CA6 /* oxalloc.c in Sources */,
-				29E873B719DF42AC0098447B /* oxtype.c in Sources */,
-				29E873AE19DDAE240098447B /* oxval.c in Sources */,
-				298AF7AC19DF7D5F00128497 /* oxparser.c in Sources */,
-				29C1516619E29FE300D25CA6 /* oxprint.c in Sources */,
-				29C1515D19E29AD300D25CA6 /* oxutil.c in Sources */,
+				29D67C9A19EAF998004421BC /* scheme.c in Sources */,
+				29D67C9919EAF998004421BC /* dynload.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
